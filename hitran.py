@@ -3,8 +3,7 @@ from re import match
 from sqlite3 import connect
 from urllib.request import urlopen
 
-from numpy import argsort, asarray, exp, finfo, float32, float64, log, pi, power, real, searchsorted, sqrt, sum, zeros
-from scipy.special import wofz
+from numpy import argsort, asarray, exp, finfo, float32, float64, log, power, searchsorted, sqrt, sum, zeros
 
 from database_utilities import scrub
 from hitran_html_parsers import HitranIsotopologueHTMLParser, HitranMoleculeIdHTMLParser
@@ -361,6 +360,8 @@ def create_database(database, molecule, parameters):
 
     Args:
         database: Path to SQLite database that will be create/added to.
+        molecule: Chemical formula of molecule.
+        parameters: List of HitranSpectralLine objects.
     """
     connection = connect(database)
     cursor = connection.cursor()
@@ -375,3 +376,34 @@ def create_database(database, molecule, parameters):
         cursor.execute("INSERT INTO {} VALUES ({})".format(name, value_subst), values)
     connection.commit()
     connection.close()
+
+
+def write_to_ascii(path, id, parameters):
+    """Writes HITRAN line parameters to an ascii file.
+
+    Args:
+        path: Path to output file.
+        id: HITRAN identifier for the molecule.
+        parameters: List of HitranSpectralLine objects.
+    """
+    formats = {int : "d", float32 : "g"}
+    with open(path, "w") as file:
+        for line in parameters:
+            record = []
+            for column in columns:
+                s = "{{:>{}{}}}".format(column.width, formats[column.type])
+                if column.name == "hitran_id":
+                    record.append(s.format(id))
+                else:
+                    datum = getattr(line, members[column.name])
+                    if column.name == "isotopologue" and datum > 9:
+                        if datum == 10:
+                            value = "0"
+                        else:
+                            value = chr(ord("A") + datum - 11)
+                    else:
+                        value = s.format(datum)
+                    record.append(value[len(value)-column.width:])
+                    if column.name == "strength":
+                        record.append(" "*10)
+            file.write("{}\n".format("".join(record)))
