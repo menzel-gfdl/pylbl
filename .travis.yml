@@ -1,20 +1,28 @@
 language: python
-os: linux
-dist: bionic
-arch: amd64
-
-python:
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "3.8"
+jobs:
+  include:
+    - name: "Python on Linux"
+      os: linux
+      python: 3.8
+    - name: "Python on macOS"
+      os: osx
+      osx_image: xcode11.2
+      language: shell
+    - name: "Python on Windows"
+      os: windows
+      language: shell
+      before_install:
+        - choco install python --version 3.8.0
+        - python -m pip install --upgrade pip
+      env: PATH=/c/Python38:/c/Python38/Scripts:$PATH
 
 install:
-  - pip install -r requirements.txt
+  - pip3 install --upgrade pip
+  - pip3 install -r requirements.txt
 
 script:
-  - python3 test_database_utilities.py
-  - python3 test_line_profiles.py
-  - python3 test_tips.py
-  - python3 test_hitran_html_parsers.py 
-  - python3 test_hitran.py
+  - python3 test_database_utilities.py || python test_database_utilities.py
+  - python3 test_line_profiles.py || python test_line_profiles.py
+  - python3 test_tips.py || python test_tips.py
+  - python3 test_hitran_html_parsers.py || python test_hitran_html_parsers.py
+  - python3 test_hitran.py || python test_hitran.py
