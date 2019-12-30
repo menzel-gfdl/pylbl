@@ -1,5 +1,6 @@
 from logging import basicConfig, INFO
-from tempfile import NamedTemporaryFile
+from os.path import join
+from tempfile import TemporaryDirectory
 from unittest import main, TestCase
 
 from tips import TotalPartitionFunction
@@ -10,15 +11,18 @@ isotopologue = 1
 temperature = 270.
 result = 152.19
 tolerance = 5
+name = "test"
+
 
 class TestTips(TestCase):
 
     def test_from_file(self):
         t = TotalPartitionFunction()
         t.download_from_web(molecule)
-        with NamedTemporaryFile(suffix=".nc") as path:
-            t.write_to_netcdf(path.name)
-            t.read_from_dataset(path.name)
+        with TemporaryDirectory() as directory:
+            path = join(directory, "{}.nc".format(name))
+            t.write_to_netcdf(path)
+            t.read_from_dataset(path)
         q = t.total_partition_function(temperature, isotopologue)
         self.assertAlmostEqual(q, result, places=tolerance)
 
@@ -31,9 +35,10 @@ class TestTips(TestCase):
     def test_from_database(self):
         t = TotalPartitionFunction()
         t.download_from_web(molecule)
-        with NamedTemporaryFile(suffix=".db") as database:
-            t.create_database(database.name)
-            t.load_from_database(molecule, database.name)
+        with TemporaryDirectory() as directory:
+            database = join(directory, "{}.db".format(name))
+            t.create_database(database)
+            t.load_from_database(molecule, database)
         q = t.total_partition_function(temperature, isotopologue)
         self.assertAlmostEqual(q, result, places=tolerance)
 
