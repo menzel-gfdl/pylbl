@@ -2,7 +2,7 @@ from unittest import main, TestCase
 
 from numpy import linspace, zeros
 
-from line_profiles import Doppler, Lorentz, Voigt
+from pylbl.line_profiles import Doppler, Lorentz, Voigt
 
 
 grid = linspace(-1., 1., 1000)

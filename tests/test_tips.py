@@ -2,7 +2,7 @@ from logging import basicConfig, INFO
 from tempfile import NamedTemporaryFile
 from unittest import main, TestCase
 
-from tips import TotalPartitionFunction
+from pylbl.tips import TotalPartitionFunction
 
 
 molecule = "H2O"
@@ -10,6 +10,7 @@ isotopologue = 1
 temperature = 270.
 result = 152.19
 tolerance = 5
+
 
 class TestTips(TestCase):
 

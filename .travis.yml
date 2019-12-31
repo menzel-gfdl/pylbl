@@ -12,9 +12,12 @@ python:
 install:
   - pip install -r requirements.txt
 
+env:
+  - PYTHONPATH="$PWD"
+
 script:
-  - python3 test_database_utilities.py
-  - python3 test_line_profiles.py
-  - python3 test_tips.py
-  - python3 test_hitran_html_parsers.py 
-  - python3 test_hitran.py
+  - python3 tests/test_database_utilities.py
+  - python3 tests/test_line_profiles.py
+  - python3 tests/test_tips.py
+  - python3 tests/test_hitran_html_parsers.py 
+  - python3 tests/test_hitran.py

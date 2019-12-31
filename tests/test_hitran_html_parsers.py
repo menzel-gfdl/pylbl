@@ -1,7 +1,7 @@
 from unittest import main, TestCase
 from urllib.request import urlopen
 
-from hitran_html_parsers import HitranIsotopologueHTMLParser, HitranMoleculeIdHTMLParser
+from pylbl.hitran_html_parsers import HitranIsotopologueHTMLParser, HitranMoleculeIdHTMLParser
 
 
 class TestHitranHTMLParsers(TestCase):

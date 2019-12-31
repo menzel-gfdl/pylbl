@@ -5,10 +5,10 @@ from urllib.request import urlopen
 
 from numpy import argsort, asarray, exp, finfo, float32, float64, log, power, searchsorted, sqrt, sum, zeros
 
-from database_utilities import scrub
-from hitran_html_parsers import HitranIsotopologueHTMLParser, HitranMoleculeIdHTMLParser
-from line_profiles import Doppler, Lorentz, Voigt
-from tips import tips_reference_temperature
+from .database_utilities import scrub
+from .hitran_html_parsers import HitranIsotopologueHTMLParser, HitranMoleculeIdHTMLParser
+from .line_profiles import Doppler, Lorentz, Voigt
+from .tips import tips_reference_temperature
 
 
 RecordFormat = namedtuple("RecordFormat", ["position", "width", "name", "type"])

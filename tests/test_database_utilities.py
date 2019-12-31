@@ -1,6 +1,6 @@
 from unittest import main, TestCase
 
-from database_utilities import scrub
+from pylbl.database_utilities import scrub
 
 
 class TestTips(TestCase):
