@@ -308,6 +308,7 @@ class HitranDatabase(object):
                 setattr(line, attr, data)
             parameters.append(line)
         connection.close()
+        return parameters
 
     @staticmethod
     def molecular_line_records(request):
