@@ -30,7 +30,8 @@ release = "beta"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.viewcode"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.viewcode",
+              "sphinxcontrib.apidoc"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -48,12 +49,16 @@ napoleon_include_special_with_doc = True
 napoleon_numpy_docstring = False
 napoleon_use_keyword = True
 
+# Apidoc settings.
+apidoc_module_dir = "../pylbl"
+apidoc_output_dir = "api"
+apidoc_separate_modules = True
+
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
 html_theme = "bizstyle"
 
 # Add any paths that contain custom static files (such as style sheets) here,
