@@ -6,7 +6,7 @@ from urllib.request import urlopen
 from netCDF4 import Dataset
 from numpy import asarray, copy, float32, float64, transpose, searchsorted
 
-from .database_utilities import scrub
+from ..utils.database_utilities import scrub
 
 
 tips_reference_temperature = 296.

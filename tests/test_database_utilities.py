@@ -1,6 +1,6 @@
 from unittest import main, TestCase
 
-from pylbl.database_utilities import scrub
+from pyrad.utils.database_utilities import scrub
 
 
 class TestTips(TestCase):

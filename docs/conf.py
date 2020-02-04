@@ -50,7 +50,7 @@ napoleon_numpy_docstring = False
 napoleon_use_keyword = True
 
 # Apidoc settings.
-apidoc_module_dir = "../pylbl"
+apidoc_module_dir = "../pyrad"
 apidoc_output_dir = "api"
 apidoc_separate_modules = True
 

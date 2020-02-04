@@ -1,8 +1,8 @@
 from tempfile import NamedTemporaryFile
 from unittest import main, TestCase
 
-from pylbl.hitran import create_database, HitranDatabase, HitranSpectralLines, write_to_ascii
-from pylbl.tips import TotalPartitionFunction
+from pyrad.lbl.hitran import create_database, HitranDatabase, HitranSpectralLines, write_to_ascii
+from pyrad.lbl.tips import TotalPartitionFunction
 
 
 class TestHitranHTMLParsers(TestCase):

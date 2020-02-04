@@ -2,7 +2,7 @@ from logging import basicConfig, INFO
 from tempfile import NamedTemporaryFile
 from unittest import main, TestCase
 
-from pylbl.tips import TotalPartitionFunction
+from pyrad.lbl.tips import TotalPartitionFunction
 
 
 molecule = "H2O"
