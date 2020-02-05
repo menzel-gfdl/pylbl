@@ -16,7 +16,7 @@ env:
   - PYTHONPATH="$PWD"
 
 script:
-  - wget ftp://ftp2.gfdl.noaa.gov/pub/Raymond.Menzel/pyrad_data.tar.gz
+  - wget ftp://ftp2.gfdl.noaa.gov/perm/Raymond.Menzel/pyrad_data.tar.gz
   - tar xvfz pyrad_data.tar.gz
   - python3 tests/test_database_utilities.py
   - python3 tests/test_line_profiles.py
