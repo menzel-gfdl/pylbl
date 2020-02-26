@@ -25,4 +25,5 @@ script:
   - python3 tests/test_hitran.py
   - python3 tests/test_water_clouds.py
   - python3 tests/test_ice_clouds.py
+  - python3 tests/test_stochastic.py
   - python3 tests/test_two_stream.py
