@@ -2,7 +2,7 @@ from unittest import main, TestCase
 
 from numpy import asarray, log
 
-from pyrad.clouds.stochastic import cloudiness, overlap_parameter, TotalWaterPDF
+from pyrad.clouds.stochastic import overlap_parameter, TotalWaterPDF
 
 
 class TestStochasticClouds(TestCase):
@@ -47,7 +47,7 @@ class TestStochasticClouds(TestCase):
                             650., 700., 750., 775.,
                             800., 825., 850., 875.,
                             900., 925., 950., 975.,
-                            1000])
+                            1000.])
         z = log(pressure)
         scale_height, p, q = 2, 5, 5
         alpha = overlap_parameter(z, scale_height)

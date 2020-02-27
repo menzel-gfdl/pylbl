@@ -1,11 +1,11 @@
-from numpy import exp, nonzero, zeros
+from numpy import abs, exp, nonzero
 from numpy.ma import masked_where
 from numpy.random import rand
 from scipy.special import betainc, betaincinv
 
 
 class TotalWaterPDF(object):
-    """Tota water mixing ratio in dry air probability distribution function.
+    """Total water mixing ratio in dry air probability distribution function.
 
     Attributes:
         p: incomplete beta distribution shape parameter.
@@ -28,7 +28,7 @@ class TotalWaterPDF(object):
         """
         return betaincinv(self.p, self.q, 1. - cloud_fraction)
 
-    def width(self, cloud_fraction, lwc, iwc):
+    def width(self, cloud_fraction, lwc, iwc, qs):
         """Calculates the width of the total water probability distribution function (b - a)
            from equation A2 from doi: 10.1175/MWR3257.1, ignoring the parameter alpha.
 
@@ -36,22 +36,27 @@ class TotalWaterPDF(object):
             cloud_fraction: saturated volume fraction.
             lwc: cloud liquid water condensate mixing ratio in dry air [kg/kg].
             iwc: cloud ice water condensate mixing ratio in dry air [kg/kg].
+            qs: normalized saturation specific humidity [kg/kg].
 
         Returns:
             distribution width (b - a).
         """
-        qs = self.specific_saturation_humidity(cloud_fraction)
         return (lwc + iwc)/((self.p/(self.p + self.q))*(1. - betainc(self.p + 1, self.q, qs)) \
                - qs*cloud_fraction)
 
     def sample_condensate(self, cloud_fraction, lwc, iwc, overlap):
-        """Calculates liquid and ice condensate amounts in each layer, based on the
-           description from the appendix of doi: 10.1175/MWR3257.1.
+        """Draws samples of liquid and ice condensate mixing ratios from the total water
+           (vapor + cloud liquid + ice) mixing ratio probability distribution function
+           whose mean total condensate amount equals the sum of the input cloud liquid
+           and ice condensate amounts and mean saturation humidity equals one minus
+           the input cloud fraction for each layer.  This method is detailed in the
+           appendix of doi: 10.1175/MWR3257.1.
 
         Args:
             cloud_fraction: saturated volume fraction.
             lwc: cloud liquid water condensate mixing ratio in dry air [kg/kg].
             iwc: cloud ice water condensate mixing ratio in dry air [kg/kg].
+            overlap: overlap parameter between adjacent layers.
 
         Returns:
             Masked arrays of liquid and ice condensate amounts in each layer.
@@ -60,7 +65,7 @@ class TotalWaterPDF(object):
         qa = masked_where(x.mask, cloud_fraction)
         qs = self.specific_saturation_humidity(qa)
         liquid, ice = masked_where(x.mask, lwc), masked_where(x.mask, iwc)
-        width = self.width(qa, liquid, ice)
+        width = self.width(qa, liquid, ice, qs)
         total_condensate = width*(betaincinv(self.p, self.q, x) - qs)
         liquid_fraction = liquid/(liquid + ice)
         return total_condensate*liquid_fraction, total_condensate*(1. - liquid_fraction)
@@ -76,7 +81,7 @@ def overlap_parameter(altitude, scale_length):
     Returns:
         overlap parameter between adjacent layers.
     """
-    return exp((altitude[1:] - altitude[:-1])/scale_length)
+    return exp(-1.*abs(altitude[1:] - altitude[:-1])/scale_length)
 
 
 def cloudiness(cloud_fraction, overlap_parameter):
