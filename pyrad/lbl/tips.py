@@ -6,10 +6,10 @@ from urllib.request import urlopen
 from netCDF4 import Dataset
 from numpy import asarray, copy, float32, float64, transpose, searchsorted
 
-from ..utils.database_utilities import scrub
+from ..utils.database_utilities import ascii_table_records, scrub
 
 
-tips_reference_temperature = 296.
+TIPS_REFERENCE_TEMPERATURE = 296.
 
 
 class MoleculeNotFound(Exception):
@@ -89,8 +89,8 @@ class TotalPartitionFunction(object):
         """
         temperature, q = [], []
         for record in records:
-            temperature.append(float32(record[0]))
-            q.append([float32(x) for x in record[1:]])
+            temperature.append(record[0])
+            q.append(record[1:])
         self.temperature = asarray(temperature, dtype=float32)
         self.data = transpose(asarray(q, dtype=float32))
         info("Found data for {} isotopologues at {} temperatures.".format(*self.data.shape))
@@ -107,11 +107,11 @@ class TotalPartitionFunction(object):
             self.data = copy(dataset.variables["total_partition_function"])
 
     @staticmethod
-    def records(request, molecule):
+    def records(response, molecule):
         """Parses the HTTP table for all records related to the input molecule.
 
         Args:
-            request: A urllib.request.Request object.
+            response: A http.client.HTTPResponse object.
             molecule: Molecule id.
 
         Yields:
@@ -120,30 +120,23 @@ class TotalPartitionFunction(object):
         Raises:
             MoleculeNotFound: Failed to find the input molecule.
         """
-        preamble_byte_length = 42
-        request.read(preamble_byte_length)
-        record = None
-        name_byte_width = 7
-        while record != "":
-            record = request.read(name_byte_width).decode("utf-8")
-            if search(molecule, record):
-                eol = ["\0"]
-                while eol[-1] != "\n":
-                    eol.append(request.read(1).decode("utf-8"))
-                num_isotopologues = sum(c == "Q" for c in eol)
-                break
+        found_molecule = False
+        num_isotopologues = 0
+        for line in ascii_table_records(response):
+            if found_molecule:
+                if match(r"\s*[A-Za-z0-9]+$", line):
+                    break
+                elif num_isotopologues > 0:
+                    yield [float32(x.strip()) for x in line.split()[:(num_isotopologues+1)]]
+                elif match(r"\s*T / K", line):
+                    num_isotopologues = sum(x == "Q" for x in line)
+            elif line.startswith("c"):
+                #Ignore comments.
+                continue
             else:
-                c = request.read(1).decode("utf-8")
-                while c != "\n":
-                    c = request.read(1).decode("utf-8")
-        else:
+                found_molecule = match(r"\s*{}$".format(molecule), line)
+        if not found_molecule:
             raise MoleculeNotFound("molecule {} not found in TIPS 2017 tables.".format(molecule))
-        record_byte_length = 227
-        while True:
-            record = request.read(record_byte_length).decode("utf-8").strip("\n")
-            if not match(r"\s+[0-9]", record):
-                return
-            yield [float32(x.strip()) for x in record.split()[:(num_isotopologues+1)]]
 
     def total_partition_function(self, temperature, isotopologue):
         """Interpolates the total partition function values from the TIPS 2017 table.
