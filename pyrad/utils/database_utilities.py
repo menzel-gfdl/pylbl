@@ -26,7 +26,7 @@ def ascii_table_records(response, block_size=512):
             record = ""
         if len(block) != block_size:
             #This is the last block.
-            yield lines[-1]
+            yield record + lines[-1]
             break
         elif block.endswith("\n"):
             #No carry-over data between blocks.

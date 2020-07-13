@@ -7,7 +7,7 @@ from ..line_profiles import Doppler, Lorentz, Voigt
 from ..tips import TIPS_REFERENCE_TEMPERATURE
 
 
-class SpectralLine(object):
+class _SpectralLine(object):
     """HITRAN spectral parameters for a single molecular line.
 
     Attributes:
@@ -31,6 +31,9 @@ class SpectralLine(object):
 
         Args:
             record: HITRAN database record.
+
+        Returns:
+            The current _SpectralLine object.
         """
         data = [x.strip() for x in record.split(",")]
         for i, parameter in enumerate(PARAMETERS):
@@ -48,12 +51,12 @@ class SpectralLines(object):
         en: Numpy array of transition lower state energies [cm-1] (lines).
         gamma_air: Numpy array of air-broadened halfwidths [cm-1 atm-1] (lines).
         gamma_self: Numpy array of self-broadened halfwidths [cm-1 atm-1] (lines).
+        id: HITRAN molecule id.
         iso: Numpy array of HITRAN isotopologue ids (lines).
         mass: Numpy array of isotopologue masses (lines).
         n: Numpy array of air-broadened temperature dependence powers (lines).
         s: Numpy array of line strengths [cm-1] (lines).
         q: TotalPartitionFunction object.
-        t_ref: HITRAN reference temperature.
         v: Numpy array of transition wavenumbers [cm-1] (lines).
     """
 
@@ -61,8 +64,9 @@ class SpectralLines(object):
         """Sorts line parameters by transition wavenumber, and partially corrects the line strengths.
 
         Args:
-            line_parameters: List of HitranSpectralLine objects.
+            molecule: String chemical formula.
             isotopologues: List of isotopologue namedtuples.
+            database: Database object.
             total_partition_function: TotalPartitionFunction object.
 
         Raises:
@@ -72,7 +76,7 @@ class SpectralLines(object):
         lines = []
         for record in database.records(molecule, isotopologues):
             try:
-                lines.append(SpectralLine().parse_ascii_record(record))
+                lines.append(_SpectralLine().parse_ascii_record(record))
             except ValueError as error:
                 if not "could not convert string" in str(error):
                     raise
