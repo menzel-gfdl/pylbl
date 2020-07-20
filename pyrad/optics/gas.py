@@ -1,5 +1,5 @@
-from .lbl.hitran.lines import SpectralLines
-from .lbl.tips import TotalPartitionFunction
+from ..lbl.hitran.lines import SpectralLines
+from ..lbl.tips import TotalPartitionFunction
 
 
 class Gas(object):

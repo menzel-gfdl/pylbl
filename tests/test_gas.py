@@ -3,7 +3,7 @@ from unittest import main, TestCase
 
 from numpy import seterr
 
-from pyrad.gas_optics import Gas
+from pyrad.optics.gas import Gas
 from pyrad.lbl.hitran.database import Database
 from pyrad.lbl.line_profiles import Voigt
 from pyrad.utils.grids import UniformGrid1D

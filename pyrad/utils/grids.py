@@ -1,6 +1,10 @@
 from numpy import ceil, linspace
 
 
+class GridError(BaseException):
+    pass
+
+
 class UniformGrid1D(object):
     """Uniform one-dimensional grid.
 

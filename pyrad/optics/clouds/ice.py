@@ -1,7 +1,8 @@
 from netCDF4 import Dataset
-from numpy import asarray, copy, matmul, searchsorted, zeros
+from numpy import append, asarray, copy, insert, matmul, searchsorted, zeros
 
-from .utils import CloudOptics, interp
+from .utils import CloudOptics
+from ..utils import interp, Optics
 
 
 class IceCloudOptics(CloudOptics):
@@ -46,13 +47,13 @@ class IceCloudOptics(CloudOptics):
 
         if mode.lower() == "longwave":
             n = i + 1
-            bands = 0.5*(self.bands[:i,0] + self.bands[:i,1])
-            band_limits = [self.bands[0,0], self.bands[i-1,1]]
+            bands = append(insert(0.5*(self.bands[:i,0] + self.bands[:i,1]), 0, self.bands[0,0]),
+                           self.bands[i-1,1])
             a, b, c = self.a[:i,:], self.b[:i,:], self.c[r,:i,:]
         elif mode.lower() == "shortwave":
             n = self.bands.shape[0] - i + 1
-            bands = 0.5*(self.bands[i:,0] + self.bands[i:,1])
-            band_limits = [self.bands[i,0], self.bands[-1,1]]
+            bands = append(insert(0.5*(self.bands[i:,0] + self.bands[i:,1]), 0, self.bands[i,0]),
+                           self.bands[-1,1])
             a, b, c = self.a[i:,:], self.b[i:,:], self.c[r,i:,:]
         else:
             raise ValueError("mode must be either 'longwave' or 'shortwave'.")
@@ -67,7 +68,8 @@ class IceCloudOptics(CloudOptics):
         tau[0], omega[0], g[0] = tau[1], omega[1], g[1]
         tau[-1], omega[-1], g[-1] = tau[-2], omega[-2], g[-2]
 
-        optical_depth = interp(bands, band_limits, tau, grid)
-        single_scatter_albedo = interp(bands, band_limits, omega, grid)
-        asymmetry_factor = interp(bands, band_limits, g, grid)
-        return optical_depth, single_scatter_albedo, asymmetry_factor
+        optics_ = Optics(grid)
+        optics_.tau = interp(bands, tau, grid.points)
+        optics_.omega = interp(bands, omega, grid.points)
+        optics_.g = interp(bands, g, grid.points)
+        return optics_

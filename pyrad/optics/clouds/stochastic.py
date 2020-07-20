@@ -12,7 +12,7 @@ class TotalWaterPDF(object):
         q: incomplete beta distribution shape parameter.
     """
 
-    def __init__(self, p, q):
+    def __init__(self, p=5, q=5):
         self.p = p
         self.q = q
 
