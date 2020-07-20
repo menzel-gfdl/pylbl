@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
-project = "pylbl"
+project = "pyrad"
 copyright = "2019, Raymond Menzel"
 author = "Raymond Menzel"
 

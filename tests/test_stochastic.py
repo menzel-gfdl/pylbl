@@ -2,7 +2,7 @@ from unittest import main, TestCase
 
 from numpy import asarray, log
 
-from pyrad.clouds.stochastic import overlap_parameter, TotalWaterPDF
+from pyrad.optics.clouds.stochastic import overlap_parameter, TotalWaterPDF
 
 
 class TestStochasticClouds(TestCase):

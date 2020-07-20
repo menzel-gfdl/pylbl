@@ -1,4 +1,4 @@
-pylbl
+pyrad
 =====
 
 .. image:: https://travis-ci.com/menzel-gfdl/pylbl.svg?branch=reorganize-take-2
@@ -9,7 +9,7 @@ pylbl
    :target: https://pylbl.readthedocs.io/en/latest/
    :alt: Documentation Status
 
-Pyrad is a simple (one-dimensional), pure python, all-sky atmospheric radiation package.
+   Pyrad is a simple (one-dimensional), pure python, all-sky atmospheric radiation package.
 
 .. literalinclude:: integration_test.py
    :language: Python
