@@ -6,11 +6,11 @@
 Welcome to pyrad's documentation!
 =================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+.. autopackagesummary:: pyrad
+   :toctree: _autosummary
 
-   readme
+.. include::
+   ../README.rst
 
 Indices and tables
 ==================
