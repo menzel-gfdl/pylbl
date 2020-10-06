@@ -16,18 +16,20 @@ env:
   - PYTHONPATH="$PWD"
 
 script:
+  - cd tests
   - wget ftp://ftp2.gfdl.noaa.gov/perm/Raymond.Menzel/pyrad_data.tar.gz
   - tar xvfz pyrad_data.tar.gz
-  - python3 tests/test_aerosols.py
-  - python3 tests/test_database.py
-  - python3 tests/test_database_utilities.py
-  - python3 tests/test_gas.py
-  - python3 tests/test_ice.py
-  - python3 tests/test_isotopologues.py
-  - python3 tests/test_lines.py
-  - python3 tests/test_line_profiles.py
-  - python3 tests/test_liquid.py
-  - python3 tests/test_molecules.py
-  - python3 tests/test_stochastic.py
-  - python3 tests/test_tips.py
-  - python3 tests/test_two_stream.py
+  - python3 test_aerosols.py
+  - python3 test_database.py
+  - python3 test_database_utilities.py
+  - python3 test_gas.py
+  - python3 test_ice.py
+  - python3 test_isotopologues.py
+  - python3 test_liquid.py
+  - python3 test_molecules.py
+  - python3 test_spectral_lines.py
+  - python3 test_stochastic.py
+  - python3 test_tips.py
+  - python3 test_two_stream.py
+  - cd ..
+  - python3 integration_test.py

@@ -25,10 +25,13 @@ class TotalPartitionFunction(object):
         temperature: Numpy array of temperatures [K].
     """
 
-    def __init__(self):
-        self.data = None
-        self.molecule = None
-        self.temperature = None
+    def __init__(self, molecule, database=None):
+        self.molecule = molecule
+        if database is None:
+            self.download_from_web()
+        else:
+            self.load_from_database(database)
+
 
     def create_database(self, database):
         """Creates/ingests data into a SQLite database.
@@ -36,50 +39,40 @@ class TotalPartitionFunction(object):
         Args:
             database: Path to SQLite database that will be create/added to.
         """
-        connection = connect(database)
-        cursor = connection.cursor()
-        name = scrub(self.molecule)
-        data = transpose(self.data)
-        columns = ", ".join(["temperature REAL"] +
-                            ["Q_{} REAL".format(i+1) for i in range(data.shape[1])])
-        cursor.execute("CREATE TABLE {} ({})".format(name, columns))
-        value_subst = ", ".join(["?" for _ in range(data.shape[1] + 1)])
-        for i, t in enumerate(self.temperature):
-            values = tuple(float64(x) for x in ([t] + data[i, :].tolist()))
-            cursor.execute("INSERT INTO {} VALUES ({})".format(name, value_subst), values)
-        connection.commit()
-        connection.close()
+        with connect(database) as connection:
+            cursor = connection.cursor()
+            name = scrub(self.molecule)
+            data = transpose(self.data)
+            columns = ", ".join(["temperature REAL"] +
+                                ["Q_{} REAL".format(i+1) for i in range(data.shape[1])])
+            cursor.execute("CREATE TABLE {} ({})".format(name, columns))
+            value_subst = ", ".join(["?" for _ in range(data.shape[1] + 1)])
+            for i, t in enumerate(self.temperature):
+                values = tuple(float64(x) for x in ([t] + data[i, :].tolist()))
+                cursor.execute("INSERT INTO {} VALUES ({})".format(name, value_subst), values)
+            connection.commit()
 
-    def download_from_web(self, molecule):
-        """Downloads the data from the internet.
-
-        Args:
-            molecule: Molecule id.
-        """
+    def download_from_web(self):
+        """Downloads the data from the internet."""
         url = "http://faculty.uml.edu/Robert_Gamache/Software/temp/Supplementary_file.txt"
-        info("Downloading TIPS 2017 data for {} from {}.".format(molecule, url))
-        request = urlopen(url)
-        records = self.records(request, molecule)
-        self.parse_records(records)
-        self.molecule = molecule
+        info("Downloading TIPS 2017 data for {} from {}.".format(self.molecule, url))
+        self.parse_records(self.records(urlopen(url), self.molecule))
 
     @property
     def isotopologue(self):
         return [x for x in range(self.data.shape[0])]
 
-    def load_from_database(self, molecule, database):
+    def load_from_database(self, database):
         """Loads data from a previously created SQLite database.
 
         Args:
-            molecule: Molecule chemical formula.
             database: Path to SQLite database.
         """
-        connection = connect(database)
-        cursor = connection.cursor()
-        name = scrub(molecule)
-        cursor.execute("SELECT * from {}".format(name))
-        self.parse_records(cursor.fetchall())
-        connection.close()
+        with connect(database) as connection:
+            cursor = connection.cursor()
+            name = scrub(self.molecule)
+            cursor.execute("SELECT * from {}".format(name))
+            self.parse_records(cursor.fetchall())
 
     def parse_records(self, records):
         """Parses all database records and stores the data.

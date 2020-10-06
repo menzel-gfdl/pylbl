@@ -3,9 +3,7 @@ from unittest import main, TestCase
 
 from numpy import seterr
 
-from pyrad.lbl.hitran.database import Database
-from pyrad.lbl.hitran.lines import SpectralLines
-from pyrad.lbl.line_profiles import Voigt
+from pyrad.lbl.hitran import Hitran, Voigt
 from pyrad.lbl.tips import TotalPartitionFunction
 from pyrad.utils.grids import UniformGrid1D
 
@@ -21,15 +19,13 @@ class TestLines(TestCase):
         temperature = 288.99 #K
         pressure = 983.88*mb_to_atm #atm
         abundance = {"H2O" : 0.006637074}
-        hitran = Database()
-        profile = Voigt()
-        tips = TotalPartitionFunction()
         for formula, concentration in abundance.items():
             partial_pressure = pressure*concentration #atm
-            tips.download_from_web(formula)
-            lines = SpectralLines(formula, "all", hitran, tips)
+            hitran = Hitran(formula, Voigt())
+            tips = TotalPartitionFunction(formula)
+            lines = hitran.spectral_lines(tips)
             k = lines.absorption_coefficient(temperature, pressure, partial_pressure,
-                                             spectral_grid.points, profile)
+                                             spectral_grid.points)
 
 
 if __name__ == "__main__":

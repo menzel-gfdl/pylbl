@@ -3,10 +3,7 @@ from os.path import join
 
 from numpy import asarray, seterr
 
-from pyrad.lbl.hitran.database import Database
-from pyrad.lbl.hitran.lines import SpectralLines
-from pyrad.lbl.line_profiles import Voigt
-from pyrad.lbl.tips import TotalPartitionFunction
+from pyrad.lbl.hitran import Voigt
 from pyrad.optics.aerosols import AerosolOptics
 from pyrad.optics.gas import Gas
 from pyrad.optics.clouds.ice import IceCloudOptics
@@ -23,7 +20,7 @@ if __name__ == "__main__":
 
     #Configure layer.
     mb_to_atm = 0.000986923
-    spectral_grid = UniformGrid1D(1., 3000., 0.1)
+    spectral_grid = UniformGrid1D(1., 3000., 0.01)
     temperature = 288.99 #K
     pressure = 983.88*mb_to_atm #atm
     abundance = {"H2O" : 0.006637074, 
@@ -38,10 +35,10 @@ if __name__ == "__main__":
 
         #Calculate absorption coefficient.
         info("Starting absorption coefficient calculation.")
-        hitran = Database()
-        gas = Gas(formula, hitran)
+        gas = Gas(formula, hitran_database="hitran.sqlite", line_profile=Voigt(),
+                  tips_database="tips-2017.sqlite")
         k = gas.absorption_coefficient(temperature, pressure, partial_pressure,
-                                       spectral_grid.points, Voigt())
+                                       spectral_grid.points)
         info("Finished absorption coefficient calculation.")
 
     #Calculate cloud optics.
@@ -66,7 +63,7 @@ if __name__ == "__main__":
     concentration = 1. #
     relative_humidity = 50.5 #[%].
     mixture = 80.3 #[%].
-    sulfate = AerosolOptics(join("tests", "sulfate_optics.nc"))
+    sulfate = AerosolOptics(join("tests", "pyrad_data", "aerosols", "sulfate_optics.nc"))
     aerosol_optics = sulfate.optics(concentration, spectral_grid, relative_humidity, mixture)
 
     info("Finishing integration test.")

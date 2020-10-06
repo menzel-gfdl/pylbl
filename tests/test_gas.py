@@ -4,8 +4,6 @@ from unittest import main, TestCase
 from numpy import seterr
 
 from pyrad.optics.gas import Gas
-from pyrad.lbl.hitran.database import Database
-from pyrad.lbl.line_profiles import Voigt
 from pyrad.utils.grids import UniformGrid1D
 
 
@@ -20,13 +18,11 @@ class TestGasOptics(TestCase):
         temperature = 288.99 #K
         pressure = 983.88*mb_to_atm #atm
         abundance = {"H2O" : 0.006637074}
-        hitran = Database()
-        profile = Voigt()
         for formula, concentration in abundance.items():
             partial_pressure = pressure*concentration #atm
-            gas = Gas(formula, hitran)
+            gas = Gas(formula)
             k = gas.absorption_coefficient(temperature, pressure, partial_pressure,
-                                           spectral_grid.points, profile)
+                                           spectral_grid.points)
 
 
 if __name__ == "__main__":

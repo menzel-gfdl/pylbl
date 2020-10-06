@@ -62,7 +62,8 @@ class _Parser(HTMLParser):
         elif tag == "tr" and self.inside_row and self.column > 0:
             abundance = self.abundance.replace("\xa0{}\xa010".format(chr(215)), "e")
             self.abundance = ""
-            self.iso_list.append(Isotopologue(id=int(self.id), abundance=abundance, mass=float32(self.mass)))
+            self.iso_list.append(Isotopologue(id=int(self.id), abundance=abundance,
+                                              mass=float32(self.mass)))
             self.id = ""
             self.mass = ""
             self.inside_row = False

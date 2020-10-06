@@ -1,5 +1,11 @@
 from re import match
 
+from numpy import float64
+
+
+SQL_TYPES = {float64 : "REAL",
+             int : "INTEGER"}
+
 
 def ascii_table_records(response, block_size=512):
     """Reads the next line from an ascii table.
