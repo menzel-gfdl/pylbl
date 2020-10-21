@@ -3,8 +3,22 @@ from ..lbl.tips import TotalPartitionFunction
 
 
 class Gas(object):
+    """Line-by-line gas optics.
+
+    Attributes:
+        spectral_lines: SpectralLines object.
+    """
     def __init__(self, formula, hitran_database=None, isotopologues=None, 
                  line_profile=Voigt(), tips_database=None):
+        """Obtains molecular line parameters.
+
+        Args:
+            formula: Chemical formula.
+            hitran_database: Path to sqlite hitran database.
+            isotopologues: Lists of Isotopologue objects.
+            line_profile: Doppler, Lorentz, or Voigt object.
+            tips_database: Path to sqlite tips database.
+        """
         database = Hitran(formula, line_profile, isotopologues, hitran_database)
         partition_function = TotalPartitionFunction(formula, tips_database)
         self.spectral_lines = database.spectral_lines(partition_function)

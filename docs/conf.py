@@ -13,6 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("extensions"))
 
 
 # -- Project information -----------------------------------------------------
@@ -32,7 +33,8 @@ release = "beta"
 # ones.
 extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", 
               "sphinx.ext.viewcode", "sphinxcontrib.apidoc",
-              "sphinx.ext.autosummary", "sphinx_autopackagesummary"]
+              "sphinx.ext.autosummary", "sphinx_autopackagesummary"] + \
+             ["generate_spectra", "stochastic_cloud_maps"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

@@ -1,5 +1,5 @@
 from collections import namedtuple
-from logging import info, warning
+from logging import getLogger
 from sqlite3 import connect
 from urllib.request import urlopen
 
@@ -10,6 +10,10 @@ from .line_parameters import PARAMETERS
 from .molecules import molecules
 from .spectral_lines import SpectralLines
 from ...utils.database_utilities import ascii_table_records, scrub, SQL_TYPES
+
+
+info = getLogger(__name__).info
+warning = getLogger(__name__).warning
 
 
 class Hitran(object):

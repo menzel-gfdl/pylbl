@@ -1,4 +1,4 @@
-from logging import info
+from logging import getLogger
 from re import match, search
 from sqlite3 import connect
 from urllib.request import urlopen
@@ -10,6 +10,7 @@ from ..utils.database_utilities import ascii_table_records, scrub
 
 
 TIPS_REFERENCE_TEMPERATURE = 296.
+info = getLogger(__name__).info
 
 
 class MoleculeNotFound(Exception):
