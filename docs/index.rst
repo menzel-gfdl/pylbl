@@ -10,7 +10,7 @@ Welcome to pyrad's documentation!
    :toctree: _autosummary
 
 .. include::
-   ../README.rst
+   readme.rst
 
 Indices and tables
 ==================

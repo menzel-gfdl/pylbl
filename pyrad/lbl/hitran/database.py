@@ -104,7 +104,8 @@ class Hitran(object):
         for record in records:
             try:
                 data = [x.dtype(y) for x, y in zip(self.parameters, record)]
-            except ValueError:
+            except ValueError as e:
+                print([x.shortname for x in self.parameters])
                 warning("bad data value in database record:\n{}".format(record))
                 continue
             for x, datum in zip(self.parameters, data):
