@@ -35,8 +35,7 @@ if __name__ == "__main__":
 
         #Calculate absorption coefficient.
         info("Starting absorption coefficient calculation.")
-        gas = Gas(formula, hitran_database="hitran.sqlite", line_profile=Voigt(),
-                  tips_database="tips-2017.sqlite")
+        gas = Gas(formula, line_profile=Voigt())
         k = gas.absorption_coefficient(temperature, pressure, partial_pressure,
                                        spectral_grid.points)
         info("Finished absorption coefficient calculation.")

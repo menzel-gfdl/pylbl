@@ -2,13 +2,15 @@ from pyrad.optics.gas import Gas
 from pyrad.utils.grids import UniformGrid1D
 import matplotlib.pyplot as plt
 
-spectral_grid = UniformGrid1D(1., 500., 0.1)
-gas = Gas(formula="H2O")
-k = gas.absorption_coefficient(temperature=300., pressure=1., partial_pressure=0.9,
-                               spectral_grid=spectral_grid.points)
+from pyrad.lbl.hitran import Voigt
 
-plt.plot(spectral_grid.points, k)
+grid = UniformGrid1D(1., 2500., 0.1)
+gas = Gas(formula="H2O", line_profile=Voigt())
+k = gas.absorption_coefficient(temperature=299.7, pressure=101300.,
+                               volume_mixing_ratio=.02595108, spectral_grid=grid.points)
+
+plt.plot(grid.points, k)
 plt.title("H2O Absorption Spectrum")
 plt.xlabel("wavenumber [cm-1]")
-plt.ylabel("absorption coefficient [cm-1].")
+plt.ylabel("absorption coefficient [m2].")
 plt.savefig("gas-optics.png")

@@ -16,9 +16,9 @@ class SpectralLines(object):
         gamma_self: Numpy array of self-broadened halfwidths [cm-1 atm-1] (lines).
         id: HITRAN molecule id.
         iso: Numpy array of HITRAN isotopologue ids (lines).
-        mass: Numpy array of isotopologue masses (lines).
+        mass: Numpy array of isotopologue masses [g] (lines).
         n: Numpy array of air-broadened temperature dependence powers (lines).
-        s: Numpy array of line strengths [cm-1] (lines).
+        s: Numpy array of line strengths [cm] (lines).
         q: TotalPartitionFunction object.
         v: Numpy array of transition wavenumbers [cm-1] (lines).
     """
@@ -45,7 +45,7 @@ class SpectralLines(object):
         #Partially correct line strengths.
         self.q = total_partition_function
         self.s[:] *= self.temperature_correct_line_strength(self.q, TIPS_REFERENCE_TEMPERATURE,
-                                                            self.iso[:], self.en[:], self.v[:])
+                                                            self.iso, self.en, self.v)
 
         #Get the mass of the isotopologues.
         self.mass = asarray([database.isotopologues[x-1].mass for x in self.iso])
@@ -63,10 +63,10 @@ class SpectralLines(object):
             cut_off: Distance [cm-1] from the transition frequency where the line is cut off.
 
         Returns:
-            Numpy array of absorption coefficients [cm-2] (wavenumber).
+            Numpy array of absorption coefficients [cm2] (wavenumber).
         """
         lines = shallow_copy(self)
-        lines.s = lines.correct_line_strengths(temperature)
+        lines.s = self.correct_line_strengths(temperature)
         lines.v = lines.pressure_shift_transition_wavenumbers(pressure)
         profile = shallow_copy(lines.line_profile)
         profile.update(lines, temperature, pressure, partial_pressure)
@@ -84,11 +84,11 @@ class SpectralLines(object):
             temperature: Temperature [K].
 
         Returns:
-            Numpy array of corrected line strengths [cm-1] (lines).
+            Numpy array of corrected line strengths [cm] (lines).
         """
         return self.s[:]*(1./self.temperature_correct_line_strength(self.q, temperature,
-                                                                    self.iso[:], self.en[:],
-                                                                    self.v[:]))
+                                                                    self.iso, self.en,
+                                                                    self.v))
 
     def pressure_shift_transition_wavenumbers(self, pressure):
         """Pressure-shifts transition wavenumbers.
@@ -112,9 +112,9 @@ class SpectralLines(object):
             v: Transition wavenumber [cm-1].
 
         Returns:
-            Corrected line strengths [cm-1].
+            Temperature correction factor.
         """
-        c2 = -1.4387686
+        c2 = -1.4387768795689562 #(hc/k) [K cm].
         #Divide-by-zeros may occur for transition wavenumbers close to zero, like those
         #for the O16-O17 isotopologue of O2.
-        return q.total_partition_function(t, iso)/(exp(c2*en/t)*(1. - exp(c2*v/t)))
+        return q.total_partition_function(t, iso[:])/(exp(c2*en[:]/t)*(1. - exp(c2*v[:]/t)))

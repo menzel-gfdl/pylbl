@@ -4,8 +4,15 @@ from .line_parameters import PARAMETERS
 
 
 class Doppler(object):
+    """Doppler line profile.
+
+    Attributes:
+        halfwidth: Doppler-broadened halfwidth [cm-1].
+        parameters: List of HITRAN parameter names.
+    """
+
     def __init__(self):
-        self.parameters = [PARAMETERS["center"]]
+        self.parameters = ["center"]
         self.halfwidth = None
 
     def update(self, spectral_lines, temperature, *args, **kwargs):
@@ -25,6 +32,9 @@ class Doppler(object):
             spectral_lines: SpectralLines object.
             v: Wavenumber [cm-1].
             index: Spectral line index.
+
+        Returns:
+            Line broadening [cm].
         """
         return doppler_profile(v - spectral_lines.v[index], self.halfwidth[index])
 
@@ -54,7 +64,7 @@ def doppler_profile(dv, halfwidth):
         halfwidth: Doppler-broadened line half-width [cm -1].
 
     Returns:
-        Doppler line profile [cm-1].
+        Doppler line profile broadening [cm].
     """
     alpha_d = halfwidth/sqrt(log(2))
     return exp(-1.*dv*dv/(alpha_d*alpha_d))/(alpha_d*sqrt(pi))

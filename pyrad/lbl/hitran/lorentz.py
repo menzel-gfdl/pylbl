@@ -4,8 +4,15 @@ from .line_parameters import PARAMETERS
 
 
 class Lorentz(object):
+    """Lorentz line profile.
+
+    Attributes:
+        halfwidth: Pressure-broadened halfwidth [cm-1].
+        parameters: List of HITRAN parameter names.
+    """
+
     def __init__(self):
-        self.parameters = [PARAMETERS[x] for x in ["gamma_air", "gamma_self", "n_air"]]
+        self.parameters = ["gamma_air", "gamma_self", "n_air"]
         self.halfwidth = None
 
     def update(self, spectral_lines, temperature, pressure, partial_pressure):
@@ -28,6 +35,9 @@ class Lorentz(object):
             spectral_lines: SpectralLines object.
             v: Wavenumber [cm-1].
             index: Spectral line index.
+
+        Returns:
+            Line broadening [cm].
         """
         return lorentz_profile(v - spectral_lines.v[index], self.halfwidth[index])
 
@@ -59,6 +69,6 @@ def lorentz_profile(dv, halfwidth):
         halfwidth: Pressure-broadened line half-width [cm -1].
 
     Returns:
-        Lorentz line profile [cm-1].
+        Lorentz line profile broadening [cm].
     """
     return halfwidth/(pi*(halfwidth*halfwidth + dv*dv))

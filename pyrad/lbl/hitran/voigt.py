@@ -7,8 +7,16 @@ from .lorentz import pressure_broadened_halfwidth
 
 
 class Voigt(object):
+    """Voigt line profile.
+
+    Attributes:
+        doppler_halfwidth: Doppler-broadened halfwidth [cm-1].
+        parameters: List of HITRAN parameter names.
+        pressure_halfwidth: Pressure-broadened halfwidth [cm-1].
+    """
+
     def __init__(self):
-        self.parameters = [PARAMETERS[x] for x in ["center", "gamma_air", "gamma_self", "n_air"]]
+        self.parameters = ["center", "gamma_air", "gamma_self", "n_air"]
         self.doppler_halfwidth = None
         self.pressure_halfwidth = None
 
@@ -34,6 +42,9 @@ class Voigt(object):
             spectral_lines: SpectralLines object.
             v: Wavenumber [cm-1].
             index: Spectral line index.
+
+        Returns:
+            Line broadening [cm].
         """
         return voigt_profile(v - spectral_lines.v[index], self.pressure_halfwidth[index],
                              self.doppler_halfwidth[index])
@@ -48,7 +59,7 @@ def voigt_profile(dv, pressure_halfwidth, doppler_halfwidth):
         doppler_halfwidth: Doppler-broadened line half-width [cm -1].
 
     Returns:
-        Voigt line profile [cm-1].
+        Voigt line profile broadening [cm].
     """
     sigma = doppler_halfwidth/sqrt(2*log(2))
     return wofz((dv + 1j*pressure_halfwidth)/sigma/sqrt(2)).real/sigma/sqrt(2*pi)

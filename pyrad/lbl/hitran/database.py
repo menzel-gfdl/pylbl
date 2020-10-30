@@ -31,8 +31,8 @@ class Hitran(object):
         self.molecule = molecule
         self.line_profile = line_profile
         base_parameters = ["id", "iso", "center", "strength", "elower", "delta_air"]
-        self.parameters = list(set([PARAMETERS[x] for x in base_parameters] + 
-                                   line_profile.parameters))
+        self.parameters = [PARAMETERS[x] for x in list(set(base_parameters +
+                           line_profile.parameters))]
         self.molecule_id = molecules("https://hitran.org/docs/molec-meta/")[molecule]
         self.isotopologues = isotopologue if isotopologue is not None else \
                              isotopologues("https://hitran.org/docs/iso-meta/")[molecule]
@@ -57,7 +57,7 @@ class Hitran(object):
             cursor.execute("CREATE TABLE {} ({})".format(name, columns))
             value_subst = ", ".join(["?" for _ in self.parameters])
             for i in range(getattr(self, self.parameters[0].shortname).shape[0]):
-                #Extra type cast is needed because sqlite3 can handle numpy int
+                #Extra type cast is needed because sqlite3 cannot handle numpy int
                 #objects as INTEGER values.
                 values = tuple(x.dtype(getattr(self, x.shortname)[i]) for x in self.parameters)
                 cursor.execute("INSERT INTO {} VALUES ({})".format(name, value_subst), values)
@@ -105,9 +105,11 @@ class Hitran(object):
             try:
                 data = [x.dtype(y) for x, y in zip(self.parameters, record)]
             except ValueError as e:
-                print([x.shortname for x in self.parameters])
-                warning("bad data value in database record:\n{}".format(record))
-                continue
+                if "#" in str(e):
+                    warning("bad data value in database record:\n{}".format(record))
+                    continue
+                else:
+                    raise
             for x, datum in zip(self.parameters, data):
                 self.__dict__[x.shortname].append(datum)
         for x in self.parameters:
