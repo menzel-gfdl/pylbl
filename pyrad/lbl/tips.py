@@ -1,5 +1,5 @@
 from logging import getLogger
-from re import match, search
+from re import match
 from sqlite3 import connect
 from urllib.request import urlopen
 
@@ -32,7 +32,6 @@ class TotalPartitionFunction(object):
             self.download_from_web()
         else:
             self.load_from_database(database)
-
 
     def create_database(self, database):
         """Creates/ingests data into a SQLite database.
@@ -125,7 +124,7 @@ class TotalPartitionFunction(object):
                 elif match(r"\s*T / K", line):
                     num_isotopologues = sum(x == "Q" for x in line)
             elif line.startswith("c"):
-                #Ignore comments.
+                # Ignore comments.
                 continue
             else:
                 found_molecule = match(r"\s*{}$".format(molecule), line)
@@ -144,8 +143,8 @@ class TotalPartitionFunction(object):
         """
         i = isotopologue - 1
         j = searchsorted(self.temperature, temperature, side="left") - 1
-        return self.data[i,j] + (self.data[i,j+1] - self.data[i,j])*(temperature -
-               self.temperature[j])/(self.temperature[j+1] - self.temperature[j])
+        return self.data[i, j] + (self.data[i, j+1] - self.data[i, j]) * \
+            (temperature - self.temperature[j])/(self.temperature[j+1] - self.temperature[j])
 
     def write_to_netcdf(self, path):
         """Writes data to a netCDF dataset.
@@ -162,4 +161,4 @@ class TotalPartitionFunction(object):
             v[:] = self.temperature[:]
             v = dataset.createVariable("total_partition_function", float32,
                                        dimensions=("isotopologue", "temperature"))
-            v[:,:] = self.data[:,:]
+            v[:, :] = self.data[:, :]

@@ -41,8 +41,8 @@ class TotalWaterPDF(object):
         Returns:
             distribution width (b - a).
         """
-        return (lwc + iwc)/((self.p/(self.p + self.q))*(1. - betainc(self.p + 1, self.q, qs)) \
-               - qs*cloud_fraction)
+        return (lwc + iwc)/((self.p/(self.p + self.q))*(1. - betainc(self.p + 1, self.q, qs))
+                            - qs*cloud_fraction)
 
     def sample_condensate(self, cloud_fraction, lwc, iwc, overlap):
         """Draws samples of liquid and ice condensate mixing ratios from the total water

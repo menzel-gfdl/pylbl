@@ -1,9 +1,12 @@
-from collections import namedtuple
 from copy import copy as shallow_copy
 
-from numpy import asarray, copy, exp, searchsorted, zeros
+from numpy import asarray, copy, exp, searchsorted, sqrt, zeros
 
 from ..tips import TIPS_REFERENCE_TEMPERATURE
+
+
+c2 = -1.4387768795689562  # (hc/k) [K cm].
+reference_temperature = 296.  # [K].
 
 
 class SpectralLines(object):
@@ -33,23 +36,24 @@ class SpectralLines(object):
         Raises:
             EmptySpectraError: No molecular line parameters are detected.
         """
-        #Create member arrays.
+        # Create member arrays.
         for x in database.parameters:
             setattr(self, x.shortname, copy(getattr(database, x.shortname)))
 
-        #Correct for Hitran counting weirdness (1, 2, 3, ... 9, 0, a, b, ...)
+        # Correct for Hitran counting weirdness (1, 2, 3, ... 9, 0, a, b, ...)
         for i in range(self.iso.size):
             if self.iso[i] == 0:
                 self.iso[i] = 10
 
-        #Partially correct line strengths.
+        # Get the mass of the isotopologues.
+        self.mass = asarray([float(database.isotopologues[x-1].mass) for x in self.iso])
+
+        self.line_profile = database.line_profile
         self.q = total_partition_function
+
+        # Partially correct line strengths.
         self.s[:] *= self.temperature_correct_line_strength(self.q, TIPS_REFERENCE_TEMPERATURE,
                                                             self.iso, self.en, self.v)
-
-        #Get the mass of the isotopologues.
-        self.mass = asarray([database.isotopologues[x-1].mass for x in self.iso])
-        self.line_profile = database.line_profile
 
     def absorption_coefficient(self, temperature, pressure, partial_pressure, wavenumber,
                                cut_off=25.):
@@ -72,9 +76,9 @@ class SpectralLines(object):
         profile.update(lines, temperature, pressure, partial_pressure)
         k = zeros(wavenumber.size)
         for i in range(lines.s.size):
-            l = searchsorted(wavenumber, lines.v[i] - cut_off, side="left")
-            r = searchsorted(wavenumber, lines.v[i] + cut_off, side="right")
-            k[l:r] += lines.s[i]*profile.profile(lines, wavenumber[l:r], i)
+            left = searchsorted(wavenumber, lines.v[i] - cut_off, side="left")
+            right = searchsorted(wavenumber, lines.v[i] + cut_off, side="right")
+            k[left:right] += lines.s[i]*profile.profile(lines, wavenumber[left:right], i)
         return k
 
     def correct_line_strengths(self, temperature):
@@ -114,7 +118,6 @@ class SpectralLines(object):
         Returns:
             Temperature correction factor.
         """
-        c2 = -1.4387768795689562 #(hc/k) [K cm].
-        #Divide-by-zeros may occur for transition wavenumbers close to zero, like those
-        #for the O16-O17 isotopologue of O2.
+        # Divide-by-zeros may occur for transition wavenumbers close to zero, like those
+        # for the O16-O17 isotopologue of O2.
         return q.total_partition_function(t, iso[:])/(exp(c2*en[:]/t)*(1. - exp(c2*v[:]/t)))

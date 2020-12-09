@@ -2,8 +2,8 @@ from ..lbl.hitran import Hitran, Voigt
 from ..lbl.tips import TotalPartitionFunction
 
 
-pa_to_atm = 9.86923e-6 #[atm Pa-1].
-cm_to_m = 0.01 #[m cm-1].
+pa_to_atm = 9.86923e-6  # [atm Pa-1].
+cm_to_m = 0.01  # [m cm-1].
 
 
 class Gas(object):
@@ -12,7 +12,7 @@ class Gas(object):
     Attributes:
         spectral_lines: SpectralLines object.
     """
-    def __init__(self, formula, hitran_database=None, isotopologues=None, 
+    def __init__(self, formula, hitran_database=None, isotopologues=None,
                  line_profile=Voigt(), tips_database=None):
         """Obtains molecular line parameters.
 
@@ -43,5 +43,5 @@ class Gas(object):
         """
         return self.spectral_lines.absorption_coefficient(temperature, pressure*pa_to_atm,
                                                           pressure*pa_to_atm*volume_mixing_ratio,
-                                                          spectral_grid, line_cut_off)* \
-                                                         cm_to_m*cm_to_m
+                                                          spectral_grid, line_cut_off) * \
+            cm_to_m*cm_to_m

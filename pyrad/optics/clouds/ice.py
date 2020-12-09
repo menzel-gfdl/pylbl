@@ -40,21 +40,21 @@ class IceCloudOptics(CloudOptics):
             single_scatter_albedo: Single-scatter albedo (grid).
             asymmetry_factor: Asymmetry factor (grid).
         """
-        r = searchsorted(self.radii[:,0], equivalent_radius) - 1
+        r = searchsorted(self.radii[:, 0], equivalent_radius) - 1
         i = self.last_ir_band
         d = asarray([equivalent_radius**i for i in range(self.a.shape[-1])])
         d_inv = 1./d[:]
 
         if mode.lower() == "longwave":
             n = i + 1
-            bands = append(insert(0.5*(self.bands[:i,0] + self.bands[:i,1]), 0, self.bands[0,0]),
-                           self.bands[i-1,1])
-            a, b, c = self.a[:i,:], self.b[:i,:], self.c[r,:i,:]
+            bands = append(insert(0.5*(self.bands[:i, 0] + self.bands[:i, 1]), 0, self.bands[0, 0]),
+                           self.bands[i-1, 1])
+            a, b, c = self.a[:i, :], self.b[:i, :], self.c[r, :i, :]
         elif mode.lower() == "shortwave":
             n = self.bands.shape[0] - i + 1
-            bands = append(insert(0.5*(self.bands[i:,0] + self.bands[i:,1]), 0, self.bands[i,0]),
-                           self.bands[-1,1])
-            a, b, c = self.a[i:,:], self.b[i:,:], self.c[r,i:,:]
+            bands = append(insert(0.5*(self.bands[i:, 0] + self.bands[i:, 1]), 0, self.bands[i, 0]),
+                           self.bands[-1, 1])
+            a, b, c = self.a[i:, :], self.b[i:, :], self.c[r, i:, :]
         else:
             raise ValueError("mode must be either 'longwave' or 'shortwave'.")
 

@@ -1,5 +1,5 @@
 from netCDF4 import Dataset
-from numpy import asarray, copy, reshape, searchsorted, zeros
+from numpy import asarray, copy, reshape, searchsorted
 
 from .utils import interp, Optics
 
@@ -39,16 +39,16 @@ class AerosolOptics(object):
         Returns:
             An Optics object.
         """
-        g_per_kg = 1.e3 #![g kg-1]
+        g_per_kg = 1.e3  # [g kg-1].
         i, x = (0, 1) if self.humidity_map is None else \
                (self.humidity_map[int(humidity)], self.humidity.size)
         j, y = (0, 1) if self.mixture_map is None else \
                (self.mixture_map[int(mixture)], self.mixture.size)
         shape = (y, x, self.extinction_coefficient.size//(x*y))
 
-        tau = reshape(self.extinction_coefficient, shape)[j,i,:]*concentration*g_per_kg
-        omega = reshape(self.single_scatter_albedo, shape)[j,i,:]
-        g = reshape(self.asymmetry_factor, shape)[j,i,:]
+        tau = reshape(self.extinction_coefficient, shape)[j, i, :]*concentration*g_per_kg
+        omega = reshape(self.single_scatter_albedo, shape)[j, i, :]
+        g = reshape(self.asymmetry_factor, shape)[j, i, :]
 
         optics_ = Optics(grid)
         optics_.tau = interp(self.bands, tau, grid.points)

@@ -1,4 +1,3 @@
-from collections import namedtuple
 from logging import getLogger
 from sqlite3 import connect
 from urllib.request import urlopen
@@ -21,6 +20,7 @@ class Hitran(object):
 
     Attributes:
        isotopologues: Lists of Isotopologue objects.
+       line_profile: Doppler, Lorentz, or Voigt object.
        molecule: Molecule chemical forumla.
        molecule_id: HITRAN molecule id.
        parameters: List of HitranParameter objects.
@@ -35,7 +35,7 @@ class Hitran(object):
                            line_profile.parameters))]
         self.molecule_id = molecules("https://hitran.org/docs/molec-meta/")[molecule]
         self.isotopologues = isotopologue if isotopologue is not None else \
-                             isotopologues("https://hitran.org/docs/iso-meta/")[molecule]
+            isotopologues("https://hitran.org/docs/iso-meta/")[molecule]
         for parameter in self.parameters:
             setattr(self, parameter.shortname, list())
         if database is None:
@@ -57,8 +57,8 @@ class Hitran(object):
             cursor.execute("CREATE TABLE {} ({})".format(name, columns))
             value_subst = ", ".join(["?" for _ in self.parameters])
             for i in range(getattr(self, self.parameters[0].shortname).shape[0]):
-                #Extra type cast is needed because sqlite3 cannot handle numpy int
-                #objects as INTEGER values.
+                # Extra type cast is needed because sqlite3 cannot handle numpy int
+                # objects as INTEGER values.
                 values = tuple(x.dtype(getattr(self, x.shortname)[i]) for x in self.parameters)
                 cursor.execute("INSERT INTO {} VALUES ({})".format(name, value_subst), values)
             connection.commit()
@@ -70,10 +70,10 @@ class Hitran(object):
             lower_bound: Lower bound of spectral range [cm-1], inclusive.
             upper_bound: Upper bound of spectral range [cm-1], inclusive.
         """
-        options = {"iso_ids_list" : ",".join([str(x.id) for x in self.isotopologues]),
-                   "numin" : lower_bound, 
-                   "numax" : upper_bound,
-                   "request_params" : ",".join([x.api_name for x in self.parameters])}
+        options = {"iso_ids_list": ",".join([str(x.id) for x in self.isotopologues]),
+                   "numin": lower_bound,
+                   "numax": upper_bound,
+                   "request_params": ",".join([x.api_name for x in self.parameters])}
         html_options = "&".join(["{}={}".format(key, value) for key, value in options.items()])
         url = "http://hitran.org/lbl/api?{}".format(html_options)
         info("Downloading Hitran database for {} from {}.".format(self.molecule, url))

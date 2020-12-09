@@ -2,7 +2,6 @@ from numpy import log, pi, sqrt
 from scipy.special import wofz
 
 from .doppler import doppler_broadened_halfwidth
-from .line_parameters import PARAMETERS
 from .lorentz import pressure_broadened_halfwidth
 
 

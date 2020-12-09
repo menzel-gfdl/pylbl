@@ -1,7 +1,5 @@
 from numpy import pi, power
 
-from .line_parameters import PARAMETERS
-
 
 class Lorentz(object):
     """Lorentz line profile.
@@ -57,8 +55,8 @@ def pressure_broadened_halfwidth(pressure, partial_pressure, temperature,
     Returns:
         Pressure-broadened line halfwidth [cm-1].
     """
-    return power((296./temperature), n)*(gamma_air*
-           (pressure - partial_pressure) + gamma_self*partial_pressure)
+    return power((296./temperature), n) * \
+        (gamma_air*(pressure - partial_pressure) + gamma_self*partial_pressure)
 
 
 def lorentz_profile(dv, halfwidth):

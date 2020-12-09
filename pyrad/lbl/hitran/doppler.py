@@ -1,7 +1,5 @@
 from numpy import exp, log, pi, sqrt
 
-from .line_parameters import PARAMETERS
-
 
 class Doppler(object):
     """Doppler line profile.
@@ -50,9 +48,9 @@ def doppler_broadened_halfwidth(temperature, mass, transition_wavenumber):
     Returns:
         Doppler-broadened line halfwidth [cm-1].
     """
-    m = mass/6.023e23 #Mass/Avagadro's number [g].
-    c = 2.99792458e10 #Speed of light [cm s-1].
-    kb = 1.380658e-16 #Boltzmann constant [erg K-1].
+    m = mass/6.023e23  # Mass/Avagadro's number [g].
+    c = 2.99792458e10  # Speed of light [cm s-1].
+    kb = 1.380658e-16  # Boltzmann constant [erg K-1].
     return sqrt(log(2.))*transition_wavenumber*sqrt(2.*kb*temperature/(m*c*c))
 
 
