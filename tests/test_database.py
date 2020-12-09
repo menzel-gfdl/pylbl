@@ -8,17 +8,17 @@ class TestDatabase(TestCase):
     def test_database_doppler(self):
         formulae = ["H2O"]
         for formula in formulae:
-            hitran = Hitran(formula, Doppler())
+            Hitran(formula, Doppler())
 
     def test_database_lorentz(self):
         formulae = ["H2O"]
         for formula in formulae:
-            hitran = Hitran(formula, Lorentz())
+            Hitran(formula, Lorentz())
 
     def test_database_voigt(self):
         formulae = ["H2O"]
         for formula in formulae:
-            hitran = Hitran(formula, Voigt())
+            Hitran(formula, Voigt())
 
 
 if __name__ == "__main__":

@@ -9,10 +9,8 @@ class TestTips(TestCase):
 
     def test_hu_stamnes(self):
         clouds = LiquidCloudOptics(join("pyrad_data", "clouds", "hu_stamnes.nc"))
-        lwc =  50. #g m-3
-        r = 10. #micron
-        grid = UniformGrid1D(5000., 6000., 10) #cm-1
-        optics = clouds.optics(lwc, r, grid)
+        clouds.optics(water_content=50., equivalent_radius=10.,
+                      grid=UniformGrid1D(5000., 6000., 10))
 
 
 if __name__ == "__main__":

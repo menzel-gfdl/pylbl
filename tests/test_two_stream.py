@@ -14,7 +14,7 @@ class TestTwoStream(TestCase):
 
     def test_simple(self):
         num_layers = 5
-        R_direct, T_direct, T_pure  = zeros(num_layers), zeros(num_layers), zeros(num_layers)
+        R_direct, T_direct, T_pure = zeros(num_layers), zeros(num_layers), zeros(num_layers)
         R_diffuse, T_diffuse = zeros(num_layers), zeros(num_layers)
         zenith = [uniform(0.25, 0.75), 0.5]
         for i in range(num_layers):

@@ -38,11 +38,11 @@ class LiquidCloudOptics(CloudOptics):
             for name in ("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"):
                 setattr(self, name, copy(dataset.variables[name]))
 
-    def optics(self, water_concentration, equivalent_radius, grid):
+    def optics(self, water_content, equivalent_radius, grid):
         """Calculates cloud optics.
 
         Args:
-            water_concentration: Water concentration [g m-3].
+            water_content: Water content [g m-3].
             equivalent_radius: Droplet equivalent radius [micron].
             grid: Spectral grid [cm-1].
 
@@ -58,8 +58,8 @@ class LiquidCloudOptics(CloudOptics):
         n = self.bands.size + 1
         beta, omega, g = zeros(n + 1), zeros(n + 1), zeros(n + 1)
         cm_to_km = 1.e-5
-        beta[1:n] = water_concentration*cm_to_km*(self.a1[i, :]*power(r, self.b1[i, :]) +
-                                                  self.c1[i, :])  # Equation 13.
+        beta[1:n] = water_content*cm_to_km*(self.a1[i, :]*power(r, self.b1[i, :]) +
+                                            self.c1[i, :])  # Equation 13.
         omega[1:n] = 1. - (self.a2[i, :]*power(r, self.b2[i, :]) + self.c2[i, :])  # Equation 14.
         g[1:n] = self.a3[i, :]*power(r, self.b3[i, :]) + self.c3[i, :]  # Equation 15.
         beta[0], omega[0], g[0] = beta[1], omega[1], g[1]

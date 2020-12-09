@@ -27,11 +27,11 @@ class IceCloudOptics(CloudOptics):
             for name in ("a", "b", "c"):
                 setattr(self, name, copy(dataset.variables[name]))
 
-    def optics(self, ice_concentration, equivalent_radius, grid, mode="longwave"):
+    def optics(self, ice_content, equivalent_radius, grid, mode="longwave"):
         """Calculates cloud optics.
 
         Args:
-            ice_concentration: Ice concentration [g m-3].
+            ice_content: Ice content [g m-3].
             equivalent_radius: Particle equivalent radius [micron].
             grid: Spectral grid [cm-1].
             mode: Spectral region (longwave or shortwave) to consider.
@@ -59,9 +59,9 @@ class IceCloudOptics(CloudOptics):
             raise ValueError("mode must be either 'longwave' or 'shortwave'.")
 
         tau, omega, g = zeros(n+1), zeros(n+1), zeros(n+1)
-        tau[1:n] = ice_concentration*(matmul(a, d_inv))
+        tau[1:n] = ice_content*(matmul(a, d_inv))
         if mode.lower() == "longwave":
-            omega[1:n] = ice_concentration*(matmul(b, d_inv))
+            omega[1:n] = ice_content*(matmul(b, d_inv))
         else:
             omega[1:n] = 1. - matmul(b, d)
         g[1:n] = matmul(c, d)
