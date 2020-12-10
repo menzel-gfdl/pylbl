@@ -31,11 +31,8 @@ class Hitran(object):
         self.molecule = molecule
         self.line_profile = line_profile
         base_parameters = ["id", "iso", "center", "strength", "elower", "delta_air"]
-#       self.parameters = [PARAMETERS[x] for x in list(set(base_parameters +
-#                          line_profile.parameters))]
-
-        all_parameters = base_parameters + [x for x in line_profile.parameters if x not
-                                            in base_parameters]
+        all_parameters = base_parameters + \
+                         [x for x in line_profile.parameters if x not in base_parameters]
         self.parameters = [PARAMETERS[x] for x in all_parameters]
         info(" ".join(["Using parameters"] + [x.shortname for x in self.parameters]))
         self.molecule_id = molecules("https://hitran.org/docs/molec-meta/")[molecule]
@@ -114,9 +111,7 @@ class Hitran(object):
                     warning("bad data value in database record:\n{}".format(record))
                     continue
                 else:
-                    raise ValueError("\n".join([str(e)] +
-                                               [",".join([x.shortname for x in self.parameters])] +
-                                               [",".join(record)]))
+                    raise
             for x, datum in zip(self.parameters, data):
                 self.__dict__[x.shortname].append(datum)
         for x in self.parameters:
