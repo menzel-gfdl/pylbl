@@ -2,11 +2,11 @@ from copy import copy as shallow_copy
 
 from numpy import asarray, copy, exp, searchsorted, sqrt, zeros
 
+from .line_mixing import rigid_rotor_dipole_matrix_element
+from .line_parameters import c2, reference_temperature
 from ..tips import TIPS_REFERENCE_TEMPERATURE
 
 
-c2 = -1.4387768795689562  # (hc/k) [K cm].
-reference_temperature = 296.  # [K].
 
 
 class SpectralLines(object):
@@ -54,6 +54,17 @@ class SpectralLines(object):
         # Partially correct line strengths.
         self.s[:] *= self.temperature_correct_line_strength(self.q, TIPS_REFERENCE_TEMPERATURE,
                                                             self.iso, self.en, self.v)
+
+        if self.line_profile.line_mixing is not None:
+            self.population = self.g[:]*exp(c2*self.en[:]/reference_temperature) / \
+                              self.q.total_partition_function(TIPS_REFERENCE_TEMPERATURE, self.iso[:])
+            self.dipole = sqrt(self.s[:]/(self.g[:]*self.v[:]))
+            self.dk0 = zeros(self.q2.size)
+            for i in range(self.q2.size):
+                self.dk0[i] = rigid_rotor_dipole_matrix_element(self.q2[i]["j"],
+                                                                self.q1[i]["j"],
+                                                                self.q2[i]["l2"],
+                                                                self.q1[i]["l2"])
 
     def absorption_coefficient(self, temperature, pressure, partial_pressure, wavenumber,
                                cut_off=25.):

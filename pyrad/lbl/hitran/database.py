@@ -104,16 +104,23 @@ class Hitran(object):
             records: A list of dictionaries containing database record values.
         """
         for record in records:
-            try:
-                data = [x.dtype(y) for x, y in zip(self.parameters, record)]
-            except ValueError as e:
-                if "#" in str(e):
-                    warning("bad data value in database record:\n{}".format(record))
-                    continue
-                else:
-                    raise
+            data = []
+            for x, y in zip(self.parameters, record):
+                try:
+                    data.append(x.dtype(y))
+                except ValueError as e:
+                    if "#" in str(e):
+                        if x.shortname == "n_self":
+                            data.append(None)
+                        else:
+                            warning("bad data value in database record:\n{}".format(record))
+                            continue
+                    else:
+                        raise
             for x, datum in zip(self.parameters, data):
                 self.__dict__[x.shortname].append(datum)
+            if "n_self" in self.__dict__ and self.n_self[-1] is None:
+                self.n_self[-1] = self.n_air[-1]
         for x in self.parameters:
             setattr(self, x.shortname, asarray(getattr(self, x.shortname)))
         info("Found data for {} lines for {}.".format(getattr(self, self.parameters[0].shortname).shape[0],

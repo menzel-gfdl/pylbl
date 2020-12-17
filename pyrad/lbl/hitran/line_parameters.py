@@ -4,6 +4,10 @@ from re import match
 from numpy import float64
 
 
+c2 = -1.4387768795689562  # (hc/k) [K cm].
+reference_temperature = 296.  # [K].
+
+
 def linear_molecule_quantum_numbers(value):
     m = match(r"ElecStateLabel=X;v1=([0-9]+);v2=([0-9]+);l2=([0-9]+);v3=([0-9]+);J=([0-9]+);",
               value)

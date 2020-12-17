@@ -10,7 +10,7 @@ class Lorentz(object):
     """
 
     def __init__(self):
-        self.parameters = ["gamma_air", "gamma_self", "n_air"]
+        self.parameters = ["gamma_air", "gamma_self", "n_air", "n_self"]
         self.halfwidth = None
 
     def update(self, spectral_lines, temperature, pressure, partial_pressure):
@@ -23,7 +23,8 @@ class Lorentz(object):
             partial_pressure: Partial pressure [atm].
         """
         self.halfwidth = pressure_broadened_halfwidth(pressure, partial_pressure, temperature,
-                                                      spectral_lines.n_air, spectral_lines.gamma_air,
+                                                      spectral_lines.n_air, spectral_lines.n_self,
+                                                      spectral_lines.gamma_air,
                                                       spectral_lines.gamma_self)
 
     def profile(self, spectral_lines, v, index):
@@ -41,22 +42,23 @@ class Lorentz(object):
 
 
 def pressure_broadened_halfwidth(pressure, partial_pressure, temperature,
-                                 n, gamma_air, gamma_self):
+                                 n_air, n_self, gamma_air, gamma_self):
     """Calculates pressure-broadened line halfwidth.
 
     Args:
         pressure: Pressure [atm].
         partial_pressure: Partial pressure [atm].
         temperature: Temperature [K]
-        n: Air-broadened temperature dependence powers.
+        n_air: Air-broadened temperature dependence powers.
+        n_self: Self-broadened temperature dependence powers.
         gamma_air: Air-broadened halfwidth [cm-1 atm-1].
         gamma_self: Self-broadened halfwidth [cm-1 atm-1].
 
     Returns:
         Pressure-broadened line halfwidth [cm-1].
     """
-    return power((296./temperature), n) * \
-        (gamma_air*(pressure - partial_pressure) + gamma_self*partial_pressure)
+    return power((296./temperature), n_air)*(gamma_air*(pressure - partial_pressure)) + \
+           power((296./temperature), n_self)*gamma_self*partial_pressure
 
 
 def lorentz_profile(dv, halfwidth):
