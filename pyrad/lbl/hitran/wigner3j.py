@@ -182,15 +182,14 @@ def _general_case(a, b, c, alpha, beta, gamma):
                                     a - alpha, b + beta, b - beta, c + gamma,
                                     c - gamma] if x > 1])
     denominator1 = [a + b + c + 1]
-    v = min(a + alpha, a - alpha, b + beta, b - beta, c + gamma, c - gamma,
-            a + b - c, b + c - a, c + a - b)
     s = 0.
-    for t in range(v + 1):
+    start = max(-c + a + beta, -c + b - alpha, 0)
+    stop = min(b + beta, a - alpha, a + b - c)
+    for t in range(start, stop + 1):
         d = [x for x in [t, c - b + t + alpha, c - a + t - beta,
                          a + b - c - t, a - t - alpha,
                          b - t + beta] if x >= 0]
-        if len(d) < 6:
-            continue
+        if len(d) < 6: continue
         denominator = sorted([x for x in denominator1 + d + d if x > 1])
         top, bottom = [], []
         for x, y in zip(numerator, denominator):
@@ -203,7 +202,6 @@ def _general_case(a, b, c, alpha, beta, gamma):
             top += [(1, x) for x in numerator[len(denominator):]]
         elif len(numerator) < len(denominator):
             bottom += [(1, x) for x in denominator[len(numerator):]]
-
         f1 = 1
         for x in top:
             f1 *= _fact(x[0], x[1])

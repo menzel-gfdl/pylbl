@@ -2,7 +2,6 @@ from logging import getLogger
 
 from netCDF4 import Dataset
 from numpy import copy, exp, identity, int32, log, nonzero, ones, power, sqrt, where, zeros
-from scipy.special import factorial
 
 from .line_mixing_fortran import calculate_coefficients, create_relaxation_matrix
 from .line_parameters import c2, reference_temperature
@@ -14,13 +13,35 @@ info = getLogger(__name__).info
 
 
 class LineMixing(object):
+    """Line mixing container.  Adapted from doi: 10.1016/j.jqsrt.2004.11.011.
+
+    Attributes:
+        b0pp: Fitted relaxation matrix temperature dependence powers for p-p transitions.
+        b0pq: Fitted relaxation matrix temperature dependence powers for p-q transitions.
+        b0pr: Fitted relaxation matrix temperature dependence powers for p-r transitions.
+        b0qp: Fitted relaxation matrix temperature dependence powers for q-p transitions.
+        b0qq: Fitted relaxation matrix temperature dependence powers for q-q transitions.
+        b0qr: Fitted relaxation matrix temperature dependence powers for q-r transitions.
+        b0rp: Fitted relaxation matrix temperature dependence powers for r-p transitions.
+        b0rq: Fitted relaxation matrix temperature dependence powers for r-q transitions.
+        b0rr: Fitted relaxation matrix temperature dependence powers for r-r transitions.
+        w0pp: Fitted relaxation matrix values for p-p transitions.
+        w0pq: Fitted relaxation matrix values for p-q transitions.
+        w0pr: Fitted relaxation matrix values for p-r transitions.
+        w0qp: Fitted relaxation matrix values for q-p transitions.
+        w0qq: Fitted relaxation matrix values for q-q transitions.
+        w0qr: Fitted relaxation matrix values for q-r transitions.
+        w0rp: Fitted relaxation matrix values for r-p transitions.
+        w0rq: Fitted relaxation matrix values for r-q transitions.
+        w0rr: Fitted relaxation matrix values for r-r transitions.
+    """
     def __init__(self, path):
         """Reads the (w0, b0) fitted parameters taken from doi: 10.1016/j.jqsrt.2014.09.017.
 
         Args:
             path - Path to netcdf file.
         """
-        info("Reading line mixing data from {}.".format(path))
+        info("Reading line-mixing relaxation matrix data from {}.".format(path))
         with Dataset(path, "r") as dataset:
             for branch in ["pp", "pq", "pr", "qp", "qq", "qr", "rp", "rq", "rr"]:
                 setattr(self, "w0{}".format(branch),
@@ -28,21 +49,20 @@ class LineMixing(object):
                 setattr(self, "b0{}".format(branch),
                         copy(dataset.variables["b0{}".format(branch)], order="F"))
 
-    def create_relaxation_matrix(self, li, lf, ji, jf, population, temperature, iso,
+    def create_relaxation_matrix(self, l2_i, l2_f, j_i, j_f, population, temperature,
                                  gamma, dk0, mask, I, I_off):
         """Calculates the relaxation matrix as in doi: 10.1016/j.jqsrt.2014.09.017.
 
         Args:
-            li:
-            lf:
-            ji:
-            jf:
-            population:
+            l2_i: Initial state l2 angular momentum.
+            l2_f: Final state l2 angular momentum.
+            j_i: Array of initial state rotational quantum numbers.
+            j_f: Array of final state rotational quantum_numbers.
+            population: Array of lower level populations.
             temperature: Temperature [K].
-            iso: Isotopologue id.
-            gamma:
-            dk0:
-            mask:
+            gamma: Array of pressure-broadened halfwidth coefficients [cm-1 atm-1].
+            dk0: Rigid rotor dipole matrix elements.
+            mask: Matrix used to mask out specific transitions.
             I: Identity matrix.
             I_off: Matrix with zeros on-diagonal and ones off-diagonal.
 
@@ -50,16 +70,16 @@ class LineMixing(object):
             Relaxation matrix.
         """
         tlog = log(reference_temperature/temperature)
-        w = zeros((ji.size, ji.size))
-        if li <= lf:
-            a, b, j1, j2 = li, lf, ji[:], jf[:]
+        w = zeros((j_i.size, j_i.size))
+        if l2_i <= l2_f:
+            a, b, j1, j2 = l2_i, l2_f, j_i[:], j_f[:]
         else:
-            a, b, j1, j2 = lf, li, jf[:], ji[:]
+            a, b, j1, j2 = l2_f, l2_i, j_f[:], j_i[:]
         #xmask = where((j1.reshape(j1.size, 1) > j1), 0., 1.)*mask
         xmask = where((j1 > j1.reshape(j1.size, 1)), 0., 1.)*mask
-        for i in range(ji.size):
+        for i in range(j_i.size):
             branch1 = branch(j1[i], j2[i])
-            w0, b0 = zeros(ji.size), zeros(ji.size)
+            w0, b0 = zeros(j_i.size), zeros(j_i.size)
             indices = nonzero(xmask[i, :])[0]
             for j in indices:
                 branch2 = branch(j1[j], j2[j])
@@ -110,7 +130,7 @@ class LineMixing(object):
                 ji[j] = qns2["j"]
                 jf[j] = qns1["j"]
 
-            #Adjust the level populations for temperature.
+            #Adjust the lower level populations for temperature.
             n = temperature_adjust_population(spectral_lines.iso[indices[0]],
                                               spectral_lines.population[indices],
                                               spectral_lines.en[indices],
@@ -161,11 +181,12 @@ class LineMixing(object):
             #Calculate first order line-mixing coefficients.
 #           y[indices] = calculate_coefficients(w, dipole_s, v_s, I_off, x) * \
 #                        pressure
-            yt = zeros(ji_s.size)
+            yt_s, yt = zeros(ji_s.size), zeros(ji_s.size)
             calculate_coefficients(ji_s.size, spectral_lines.iso[indices[0]],
-                                   dipole_s, ji_s, v_s, w, yt)
-            y[indices] = yt[:]*pressure
+                                   dipole_s, ji_s, v_s, w, yt_s)
 
+            yt[sorted_indices[::-1]] = yt_s[:]
+            y[indices] = yt[:]
         return y
 
 
@@ -194,13 +215,13 @@ def temperature_adjust_halfwidth(n_air, n_self, gamma_air, gamma_self, mixing_ra
     Args:
         n_air: Air-broadened halfwidth temperature dependence power.
         n_self: Self-broadened halfwidth temperature dependence power.
-        gamma_air: Air-broadened halfwidth at reference temperature [cm-1].
-        gamma_self: Self-broadened halfwidth at reference temperature [cm-1].
+        gamma_air: Air-broadened halfwidth at reference temperature [atm-1 cm-1].
+        gamma_self: Self-broadened halfwidth at reference temperature [atm-1 cm-1].
         mixing_ratio: Molecular mixing ratio.
         temperature: Temperature [K].
 
     Returns:
-        Temperature-corrected halfwidth [cm-1].
+        Temperature-corrected halfwidth [atm-1 cm-1].
     """
     return (1. - mixing_ratio)*gamma_air*power(reference_temperature/temperature, n_air) + \
            mixing_ratio*gamma_self*power(reference_temperature/temperature, n_self)
@@ -230,8 +251,8 @@ def branch(ji, jf):
     """Returns the branch designation string for the transition.
 
     Args:
-        ji:
-        jf:
+        ji: Initial state rotational quantum number.
+        jf: Final state rotational quantum number.
 
     Returns:
         Character describing transition.
@@ -249,7 +270,7 @@ def mask(iso, ji):
 
     Args:
         iso: Isotopologue id.
-        ji:
+        ji: Initial state rotational quantum number.
 
     Returns:
         Array of zeros and ones used to mask out transitions.
@@ -265,10 +286,10 @@ def rigid_rotor_dipole_matrix_element(ji, jf, l2i, l2f):
        doi: 10.1016/j.jqsrt.2004.11.011
 
     Args:
-        ji: Initial state J value.
-        jf: Final state J value.
-        l2i: Initial state l2 value.
-        l2f: Final state l2 value.
+        ji: Initial state rotational quantum number.
+        jf: Final state rotational quantum number.
+        l2i: Initial state l2 angular momentum value.
+        l2f: Final state l2 angular momentum value.
 
     Returns:
         Rigid rotor dipole matrix element.

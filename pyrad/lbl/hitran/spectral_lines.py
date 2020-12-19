@@ -7,20 +7,22 @@ from .line_parameters import c2, reference_temperature
 from ..tips import TIPS_REFERENCE_TEMPERATURE
 
 
-
-
 class SpectralLines(object):
     """Hitran spectral line parameters for a molecule.
 
     Attributes:
         delta: Numpy array of air-broadended pressure shifts [cm-1 atm-1] (lines).
+        dipole: Numpy array of transition moments [cm] (lines).
+        dk0: Numpy array of rigid rotor dipole matrix elements (lines).
         en: Numpy array of transition lower state energies [cm-1] (lines).
+        g: Numpy array of lower state statistical weights (lines).
         gamma_air: Numpy array of air-broadened halfwidths [cm-1 atm-1] (lines).
         gamma_self: Numpy array of self-broadened halfwidths [cm-1 atm-1] (lines).
         id: HITRAN molecule id.
         iso: Numpy array of HITRAN isotopologue ids (lines).
         mass: Numpy array of isotopologue masses [g] (lines).
         n: Numpy array of air-broadened temperature dependence powers (lines).
+        population: Numpy array of lower state populations (lines).
         s: Numpy array of line strengths [cm] (lines).
         q: TotalPartitionFunction object.
         v: Numpy array of transition wavenumbers [cm-1] (lines).
@@ -47,7 +49,6 @@ class SpectralLines(object):
 
         # Get the mass of the isotopologues.
         self.mass = asarray([float(database.isotopologues[x-1].mass) for x in self.iso])
-
         self.line_profile = database.line_profile
         self.q = total_partition_function
 
