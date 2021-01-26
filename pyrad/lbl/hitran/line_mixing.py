@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 from numpy import copy, exp, identity, int32, log, nonzero, ones, power, sqrt, where, zeros
 
 from .line_mixing_fortran import calculate_coefficients, create_relaxation_matrix
-from .line_parameters import c2, reference_temperature
+from .line_parameters import c2, linear_molecule_state_vars, reference_temperature
 from ..tips import TIPS_REFERENCE_TEMPERATURE
 from .wigner3j import wigner_3j
 
@@ -48,6 +48,28 @@ class LineMixing(object):
                         copy(dataset.variables["w0{}".format(branch)], order="F"))
                 setattr(self, "b0{}".format(branch),
                         copy(dataset.variables["b0{}".format(branch)], order="F"))
+
+    def calculate_coefficients(relaxation_matrix, dipole, line_center, I_off, mask):
+        """Calculates first-order line-mixing coefficients using equation 6 of
+           doi: 10.1016/j.jqsrt.2004.11.011.
+
+        Args:
+            relaxation_matrix: Relaxation matrix.
+            line_center: Line center wavenumber [cm-1].
+            I_off: 2D matrix with 0s on diagnal and 1s off-diagonal.
+            mask: Matrix used to mask out certain transitions.
+
+        Returns:
+            First-order line-mixing coefficients.
+        """
+        y = zeros(line_center.size)
+        dipole_ratio = dipole/dipole.reshape((dipole.size, 1))
+        x = line_center.reshape((line_center.size, 1)) - line_center
+        dw = where(abs(x) < 1.e-4, 1.e-4, x)
+        x = mask*I_off*dipole_ratio/dw
+        for i in range(line_center.size):
+            y[i] = 2.*sum(x[i, :]*relaxation_matrix[:, i])
+        return y
 
     def create_relaxation_matrix(self, l2_i, l2_f, j_i, j_f, population, temperature,
                                  gamma, dk0, mask, I, I_off):
@@ -114,9 +136,8 @@ class LineMixing(object):
         """
         bands = create_bands(spectral_lines)
         y = zeros(spectral_lines.v.size)
-        for i, indices in enumerate(bands.values()):
-            info("Calculating line-mixing coefficents (band {}, {} lines)".format(i, len(indices)))
-
+        info("Calculating line-mixing coefficents ({} bands)".format(len(bands.keys())))
+        for i, (nums, indices) in enumerate(bands.items()):
             #Determine the initial and final l values.
             li = int32(spectral_lines.q2[indices[0]]["l2"])
             lf = int32(spectral_lines.q1[indices[0]]["l2"])
@@ -179,12 +200,11 @@ class LineMixing(object):
                                      self.w0rp, self.w0rq, self.w0rr, w)
 
             #Calculate first order line-mixing coefficients.
-#           y[indices] = calculate_coefficients(w, dipole_s, v_s, I_off, x) * \
-#                        pressure
+#           y[indices] = self.calculate_coefficients(w, dipole_s, v_s, I_off, x) * \
+#                                                    pressure
             yt_s, yt = zeros(ji_s.size), zeros(ji_s.size)
             calculate_coefficients(ji_s.size, spectral_lines.iso[indices[0]],
                                    dipole_s, ji_s, v_s, w, yt_s)
-
             yt[sorted_indices[::-1]] = yt_s[:]
             y[indices] = yt[:]
         return y
@@ -238,8 +258,9 @@ def create_bands(spectral_lines):
     """
     bands = {}
     for i, (upper, lower) in enumerate(zip(spectral_lines.q1, spectral_lines.q2)):
-        key = tuple([upper[x] for x in ["v1", "v2", "l2", "v3"]] +
-                    [lower[x] for x in ["v1", "v2", "l2", "v3"]])
+        key = tuple([spectral_lines.iso[i]] +
+                    [upper[x.lower()] for x in linear_molecule_state_vars.keys() if x != "J"] +
+                    [lower[x.lower()] for x in linear_molecule_state_vars.keys() if x != "J"])
         if key in bands:
             bands[key].append(i)
         else:
@@ -296,26 +317,3 @@ def rigid_rotor_dipole_matrix_element(ji, jf, l2i, l2f):
     """
     return power(-1., jf + l2f + 1)*sqrt(2*jf + 1) * \
         wigner_3j(ji, 1, jf, l2i, l2f - l2i, -l2f)
-
-
-#def calculate_coefficients(relaxation_matrix, dipole, line_center, I_off, mask):
-#    """Calculates first-order line-mixing coefficients using equation 6 of
-#       doi: 10.1016/j.jqsrt.2004.11.011.
-#
-#    Args:
-#        relaxation_matrix: Relaxation matrix.
-#        line_center: Line center wavenumber [cm-1].
-#        I_off: 2D matrix with 0s on diagnal and 1s off-diagonal.
-#        mask: Matrix used to mask out certain transitions.
-#
-#    Returns:
-#        First-order line-mixing coefficients.
-#    """
-#    y = zeros(line_center.size)
-#    dipole_ratio = dipole/dipole.reshape((dipole.size, 1))
-#    x = line_center.reshape((line_center.size, 1)) - line_center
-#    dw = where(abs(x) < 1.e-4, 1.e-4, x)
-#    x = mask*I_off*dipole_ratio/dw
-#    for i in range(line_center.size):
-#        y[i] = 2.*sum(x[i, :]*relaxation_matrix[:, i])
-#    return y

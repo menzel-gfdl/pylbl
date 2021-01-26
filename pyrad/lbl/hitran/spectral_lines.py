@@ -82,10 +82,10 @@ class SpectralLines(object):
             Numpy array of absorption coefficients [cm2] (wavenumber).
         """
         lines = shallow_copy(self)
-        lines.s = self.correct_line_strengths(temperature)
-        lines.v = lines.pressure_shift_transition_wavenumbers(pressure)
         profile = shallow_copy(lines.line_profile)
         profile.update(lines, temperature, pressure, partial_pressure)
+        lines.s = lines.correct_line_strengths(temperature)
+        lines.v = lines.pressure_shift_transition_wavenumbers(pressure)
         k = zeros(wavenumber.size)
         for i in range(lines.s.size):
             left = searchsorted(wavenumber, lines.v[i] - cut_off, side="left")

@@ -3,8 +3,7 @@ from re import match
 from numpy import float64
 
 
-SQL_TYPES = {float64: "REAL",
-             int: "INTEGER"}
+SQL_TYPES = {float64: "REAL", int: "INTEGER", str: "TEXT"}
 
 
 def ascii_table_records(response, block_size=512):
