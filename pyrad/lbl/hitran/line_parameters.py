@@ -4,13 +4,37 @@ from re import match
 from numpy import float64
 
 
+c2 = -1.4387768795689562  # (hc/k) [K cm].
+reference_temperature = 296.  # [K].
+linear_molecule_state_vars = OrderedDict([("ElecStateLabel", str), ("v1", int), ("v2", int),
+                                          ("l2", int), ("v3", int), ("J", int), ("r", int),
+                                          ("kronigParity", str)])
+
+
+class LinearMoleculeQuantumNumbersError(BaseException):
+    """Signals an error while parsing linear molecule quantum numbers."""
+    pass
+
+
 def linear_molecule_quantum_numbers(value):
-    m = match(r"ElecStateLabel=X;v1=([0-9]+);v2=([0-9]+);l2=([0-9]+);v3=([0-9]+);J=([0-9]+);",
-              value)
+    """Parses quantum numbers from HITRAN http responses.
+
+    Args:
+        value: String containing Hitran state information.
+
+    Returns:
+        An ordered dictionary of quantum numbers.
+    """
+    #Build the regular expression.
+    capture = []
+    for name, type in linear_molecule_state_vars.items():
+        group = "([0-9]+)" if type is int else "([A-Za-z]+)"
+        capture.append("{}={}".format(name, group))
+    m = match(r"{}".format(".*?;".join(capture)), value)
     if not m:
-        raise ValueError("invalid quantum numbers in {}".format(value))
-    return OrderedDict((x, int(y)) for x, y in zip(["v1", "v2", "l2", "v3", "j"],
-                                                   m.groups()))
+        raise LinearMoleculeQuantumNumbersError("invalid quantum numbers in {}".format(value))
+    return OrderedDict((x.lower(), y(z)) for (x, y), z in zip(linear_molecule_state_vars.items(),
+                                                              m.groups()))
 
 
 HitranParameter = namedtuple("HitranParameter", ["api_name", "longname", "shortname",
