@@ -3,7 +3,7 @@ from logging import getLogger
 from netCDF4 import Dataset
 from numpy import copy, exp, identity, int32, log, nonzero, ones, power, sqrt, where, zeros
 
-from .line_mixing_fortran import calculate_coefficients, create_relaxation_matrix
+#from .line_mixing_fortran import calculate_coefficients, create_relaxation_matrix
 from .line_parameters import c2, linear_molecule_state_vars, reference_temperature
 from ..tips import TIPS_REFERENCE_TEMPERATURE
 from .wigner3j import wigner_3j
@@ -49,6 +49,7 @@ class LineMixing(object):
                 setattr(self, "b0{}".format(branch),
                         copy(dataset.variables["b0{}".format(branch)], order="F"))
 
+    @staticmethod
     def calculate_coefficients(relaxation_matrix, dipole, line_center, I_off, mask):
         """Calculates first-order line-mixing coefficients using equation 6 of
            doi: 10.1016/j.jqsrt.2004.11.011.
@@ -186,25 +187,24 @@ class LineMixing(object):
             x = mask(spectral_lines.iso[indices[0]], ji_s)
 
             #Create relaxation matrix.
-#           w = self.create_relaxation_matrix(li, lf, ji_s, jf_s, n_s, temperature,
-#                                             spectral_lines.iso[indices[0]], gamma_s,
-#                                             dk0_s, x, I, I_off)
-            w = zeros((ji_s.size, ji_s.size), order="F")
-            create_relaxation_matrix(ji_s.size, temperature, spectral_lines.iso[indices[0]],
-                                     li, lf, gamma_s, n_s, dk0_s, ji_s, jf_s,
-                                     self.b0pp, self.b0pq, self.b0pr,
-                                     self.b0qp, self.b0qq, self.b0qr,
-                                     self.b0rp, self.b0rq, self.b0rr,
-                                     self.w0pp, self.w0pq, self.w0pr,
-                                     self.w0qp, self.w0qq, self.w0qr,
-                                     self.w0rp, self.w0rq, self.w0rr, w)
+            w = self.create_relaxation_matrix(li, lf, ji_s, jf_s, n_s, temperature,
+                                              gamma_s, dk0_s, x, I, I_off)
+#           w = zeros((ji_s.size, ji_s.size), order="F")
+#           create_relaxation_matrix(ji_s.size, temperature, spectral_lines.iso[indices[0]],
+#                                    li, lf, gamma_s, n_s, dk0_s, ji_s, jf_s,
+#                                    self.b0pp, self.b0pq, self.b0pr,
+#                                    self.b0qp, self.b0qq, self.b0qr,
+#                                    self.b0rp, self.b0rq, self.b0rr,
+#                                    self.w0pp, self.w0pq, self.w0pr,
+#                                    self.w0qp, self.w0qq, self.w0qr,
+#                                    self.w0rp, self.w0rq, self.w0rr, w)
 
             #Calculate first order line-mixing coefficients.
-#           y[indices] = self.calculate_coefficients(w, dipole_s, v_s, I_off, x) * \
-#                                                    pressure
-            yt_s, yt = zeros(ji_s.size), zeros(ji_s.size)
-            calculate_coefficients(ji_s.size, spectral_lines.iso[indices[0]],
-                                   dipole_s, ji_s, v_s, w, yt_s)
+            yt_s = self.calculate_coefficients(w, dipole_s, v_s, I_off, x)
+            yt = zeros(ji_s.size)
+#           yt_s, yt = zeros(ji_s.size), zeros(ji_s.size)
+#           calculate_coefficients(ji_s.size, spectral_lines.iso[indices[0]],
+#                                  dipole_s, ji_s, v_s, w, yt_s)
             yt[sorted_indices[::-1]] = yt_s[:]
             y[indices] = yt[:]
         return y
