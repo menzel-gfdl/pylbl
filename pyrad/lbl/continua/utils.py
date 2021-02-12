@@ -1,5 +1,6 @@
 from csv import reader
 from ftplib import FTP
+from logging import getLogger
 from os.path import join
 from tarfile import TarFile
 from tempfile import TemporaryDirectory
@@ -12,6 +13,7 @@ ADDRESS = "ftp2.gfdl.noaa.gov"
 TARFILE = "/perm/GFDL_pubrelease/test_data/grtcode-data.tar.gz"
 Pa_to_atm = 9.86923e-6
 cm_to_m = 0.01
+info = getLogger(__name__).info
 
 
 class GriddedField(object):
@@ -44,10 +46,12 @@ def download_gfdl_data(continuum, directory, names, parameters):
         with open(archive, "wb") as tarball:
             with FTP(ADDRESS) as ftp:
                 ftp.login()
+                info("Downloading {} from {}.".format(TARFILE, ADDRESS))
                 ftp.retrbinary("RETR {}".format(TARFILE), tarball.write)
         tarball = TarFile.open(name=archive, mode="r")
         for name, parameter in zip(names, parameters):
             path = join("grtcode-data", directory, name)
+            info("Extracting {} from {}.".format(path, TARFILE))
             tarball.extract(path, path=tmp)
             with open(join(tmp, path), newline="") as csvfile:
                 next(csvfile)

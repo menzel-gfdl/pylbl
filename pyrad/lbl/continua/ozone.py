@@ -16,10 +16,13 @@ class OzoneContinuum(object):
         download_gfdl_data(self, "ozone_continuum", ["ozone_continuum.csv",],
                            ["cross_section",])
 
-    def absorption_coefficient(self, grid):
+    def absorption_coefficient(self, temperature, pressure, volume_mixing_ratio, grid):
         """Calculates the absorption coefficient.
 
         Args:
+            temperature: Temperature [K].
+            pressure: Pressure [Pa].
+            volume_mixing_ratio: Volume mixing ratio [mol mol-1].
             grid: Numpy array of wavenumbers [cm-1].
 
         Returns:
