@@ -128,7 +128,7 @@ class HitranCrossSection(object):
                 band_params.append(table.band_params)
                 pressures.append(table.pressure)
                 tables.append(table)
-        cross_section_inquiry(tables, self.formula)
+        cross_section_inquiry(tables, self.molecule)
 
         # Sort tables by pressure, then temperature, then wavenumber.
         sorted_tables= sorted(sorted(sorted(sorted(tables, key=lambda x: x.pressure),
