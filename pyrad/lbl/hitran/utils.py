@@ -2,6 +2,9 @@ from html.parser import HTMLParser
 from urllib.request import urlopen
 
 
+cm_to_m = 0.01 # [m cm-1].
+
+
 def cross_section_bands(sorted_tables):
     """Organizes a list of sorted Table objects by spectral band.
 
@@ -113,7 +116,25 @@ class _Parser(HTMLParser):
 
 
 class Table(object):
+    """Container for HITRAN absorption coefficients tables.
+
+    Attributes:
+        band_params: Tuple describing spectral band
+                     (starting wavenumber [cm-1], ending wavenumber[cm-1], number of points).
+        cross_section: Cross sections [cm2 or cm4].
+        pressure: Pressure [Pa].
+        temperature: Temperature [K].
+        wavenumber: Wavenumber [cm-1].
+    """
     def __init__(self, temperature, band_params, pressure=None):
+        """Creates a Table object.
+
+        Args:
+            temperature: Temperature [K].
+            band_params: Tuple describing spectral band
+                         (starting wavenumber [cm-1], ending wavenumber[cm-1], number of points).
+            pressure: Pressure [Torr].
+        """
         self.temperature = temperature
         self.band_params = band_params
         if pressure is not None:
@@ -123,5 +144,11 @@ class Table(object):
         self.cross_section = []
 
     def insert(self, wavenumber, cross_section):
+        """Appends values to internal lists.
+
+        Args:
+            wavenumber: Wavenumber [cm-1].
+            cross_section: Cross section [cm2 or cm4].
+        """
         self.wavenumber.append(wavenumber)
         self.cross_section.append(cross_section)

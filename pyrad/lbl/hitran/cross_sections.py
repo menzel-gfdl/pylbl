@@ -5,7 +5,8 @@ from urllib.request import urlopen
 from numpy import abs, argwhere, asarray, linspace, min, searchsorted, zeros
 from scipy.interpolate import interp1d, interp2d, LinearNDInterpolator, NearestNDInterpolator
 
-from .utils import cross_section_bands, cross_section_data_files, cross_section_inquiry, Table
+from .utils import cm_to_m, cross_section_bands, cross_section_data_files, \
+                   cross_section_inquiry, Table
 from ...utils.database_utilities import ascii_table_records
 
 
@@ -20,7 +21,12 @@ class HitranCrossSection(object):
        molecule: Molecule chemical forumla.
     """
     def __init__(self, molecule, database=None):
-        """ """
+        """Downloads HITRAN absorption cross section data tables from the web.
+
+        Args:
+            molecule: Molecule chemical formula.
+            database: Path to database (not supported yet).
+        """
         self.molecule = molecule
         if database is None:
             self.download_from_web()
@@ -36,10 +42,10 @@ class HitranCrossSection(object):
             grid: Wavenumber grid [cm-1].
 
         Returns:
-            Array of absorption coefficients [cm2].
+            Array of absorption coefficients [m2].
         """
         cross_section = zeros(grid.size)
-        band_left_index, band_right_index = [], []
+        band_left_index = []; band_right_index = []
         for band in self.bands:
             if band[0].band_params[0] > grid[-1] or band[0].band_params[1] < grid[0]:
                 # This band is outside the input grid, so skip it.
@@ -75,7 +81,6 @@ class HitranCrossSection(object):
                 # Only one temperature and pressure, so use 1D interpolation.
                 x = asarray(band[0].wavenumber)
                 y = asarray(band[0].cross_section)
-                print(x.size, y.size, band[0].temperature, band[0].pressure)
                 cross_section[left:right] = interp1d(x, y)(grid[left:right])
             else:
                 temperatures = [x.temperature for x in band]
@@ -109,7 +114,7 @@ class HitranCrossSection(object):
                                                          data)(grid[left:right])
         # Remove non-physical negative values.
         cross_section[argwhere(cross_section < 0.)] = 0.
-        return cross_section
+        return cross_section*cm_to_m*cm_to_m
 
     def download_from_web(self):
         """Downloads HITRAN collision-induced absorption cross-sections from the web."""
@@ -171,7 +176,7 @@ class HitranCrossSection(object):
 
         Yields:
             A list values from a record from the http table.
-#       """
+        """
         for line in ascii_table_records(response):
             yield line.split()
 

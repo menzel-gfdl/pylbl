@@ -5,7 +5,8 @@ from urllib.request import urlopen
 from numpy import abs, argwhere, asarray, float64, min, searchsorted, zeros
 from scipy.interpolate import interp1d, interp2d
 
-from .utils import cross_section_bands, cross_section_data_files, cross_section_inquiry, Table
+from .utils import cm_to_m, cross_section_bands, cross_section_data_files, \
+                   cross_section_inquiry, Table
 from ...utils.database_utilities import ascii_table_records
 
 
@@ -16,15 +17,21 @@ class HitranCIA(object):
     """HITRAN collision-inducd absorption database front-end.
 
     Attributes:
-       bands: A list of lists of Table objects containing cross sections.
-       molecule: Molecule chemical forumla.
-       scatterer: Molecule chemical formula for the scatterer.
+        bands: A list of lists of Table objects containing cross sections.
+        broadener: Molecule chemical formula for the broadener.
+        molecule: Molecule chemical forumla.
     """
 
-    def __init__(self, molecule, scatterer, database=None):
-        """Creates dictionaries of HITRAN ids by scraping the HITRAN website."""
+    def __init__(self, molecule, broadener, database=None):
+        """Downloads HITRAN collision-induced absorption cross sections from the web.
+
+        Args:
+            molecule: Molecule chemical forumla.
+            broadener: Molecule chemical formula for the broadener.
+            database: Path to database (not supported yet).
+        """
         self.molecule = molecule
-        self.scatterer = scatterer
+        self.broadener = broadener
         if database is None:
             self.download_from_web()
         else:
@@ -33,8 +40,12 @@ class HitranCIA(object):
     def absorption_coefficient(self, temperature, grid):
         """Calculates collision-induced absorption coefficients.
 
+        Args:
+            temperature: Temperature [K].
+            grid: Spectral grid array [cm-1].
+
         Returns:
-            Array of absorption coefficients [cm4].
+            Array of absorption coefficients [m4].
         """
         cross_section = zeros(grid.size)
         band_left_index, band_right_index = [], []
@@ -82,12 +93,12 @@ class HitranCIA(object):
                 cross_section[left:right] = interp2d(x, y, z)(grid[left:right], temperature)
         # Remove non-physical negative values.
         cross_section[argwhere(cross_section < 0.)] = 0.
-        return cross_section
+        return cross_section*cm_to_m*cm_to_m*cm_to_m*cm_to_m
 
     def download_from_web(self):
         """Downloads HITRAN collision-induced absorption cross-sections from the web."""
         urls = ["http://hitran.org/data/CIA",]
-        interaction = "{}-{}".format(self.molecule, self.scatterer)
+        interaction = "{}-{}".format(self.molecule, self.broadener)
         tables = []; temperatures = []; band_params = []
         for url in urls:
             for f in cross_section_data_files(url):
@@ -145,7 +156,7 @@ class HitranCIA(object):
 
         Yields:
             A list values from a record from the http table.
-#       """
+        """
         for line in ascii_table_records(response):
             yield line.split()
 
