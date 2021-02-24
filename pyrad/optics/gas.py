@@ -1,9 +1,8 @@
-from ..lbl.continua import OzoneContinuum, WaterVaporContinuum
 from ..lbl.hitran import Hitran, Voigt
 from ..lbl.tips import TotalPartitionFunction
 
 
-pa_to_atm = 9.86923e-6  # [atm Pa-1].
+Pa_to_atm = 9.86923e-6  # [atm Pa-1].
 cm_to_m = 0.01  # [m cm-1].
 
 
@@ -27,10 +26,6 @@ class Gas(object):
         database = Hitran(formula, line_profile, isotopologues, hitran_database)
         partition_function = TotalPartitionFunction(formula, tips_database)
         self.spectral_lines = database.spectral_lines(partition_function)
-        if formula == "H2O":
-            self.continuum = WaterVaporContinuum()
-        elif formula == "O3":
-            self.continuum = OzoneContinuum()
 
     def absorption_coefficient(self, temperature, pressure, volume_mixing_ratio,
                                spectral_grid, line_cut_off=25.):
@@ -46,13 +41,7 @@ class Gas(object):
         Returns:
             Absorption coefficients [m2].
         """
-        lines = self.spectral_lines.absorption_coefficient(temperature, pressure*pa_to_atm,
-                                                           pressure*pa_to_atm*volume_mixing_ratio,
-                                                           spectral_grid, line_cut_off) * \
+        return self.spectral_lines.absorption_coefficient(temperature, pressure*Pa_to_atm,
+                                                          pressure*Pa_to_atm*volume_mixing_ratio,
+                                                          spectral_grid, line_cut_off) * \
             cm_to_m*cm_to_m
-        if "continuum" in vars(self):
-            continuum = self.continuum.absorption_coefficient(temperature, pressure,
-                                                              volume_mixing_ratio, spectral_grid)
-            return lines + continuum
-        else:
-            return lines
