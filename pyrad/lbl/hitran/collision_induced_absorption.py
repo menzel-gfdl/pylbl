@@ -45,7 +45,7 @@ class HitranCIA(object):
             grid: Spectral grid array [cm-1].
 
         Returns:
-            Array of absorption coefficients [m4].
+            Array of absorption coefficients [m5].
         """
         cross_section = zeros(grid.size)
         band_left_index, band_right_index = [], []
@@ -93,7 +93,7 @@ class HitranCIA(object):
                 cross_section[left:right] = interp2d(x, y, z)(grid[left:right], temperature)
         # Remove non-physical negative values.
         cross_section[argwhere(cross_section < 0.)] = 0.
-        return cross_section*cm_to_m*cm_to_m*cm_to_m*cm_to_m
+        return cross_section*cm_to_m*cm_to_m*cm_to_m*cm_to_m*cm_to_m
 
     def download_from_web(self):
         """Downloads HITRAN collision-induced absorption cross-sections from the web."""
