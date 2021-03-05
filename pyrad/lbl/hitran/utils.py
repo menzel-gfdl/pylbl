@@ -133,13 +133,12 @@ class Table(object):
             temperature: Temperature [K].
             band_params: Tuple describing spectral band
                          (starting wavenumber [cm-1], ending wavenumber[cm-1], number of points).
-            pressure: Pressure [Torr].
+            pressure: Pressure [Pa].
         """
         self.temperature = temperature
         self.band_params = band_params
         if pressure is not None:
-            torr_to_Pa = 133.332
-            self.pressure = pressure*torr_to_Pa
+            self.pressure = pressure
         self.wavenumber = []
         self.cross_section = []
 

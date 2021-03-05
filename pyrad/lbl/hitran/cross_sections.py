@@ -1,5 +1,6 @@
 from logging import getLogger
-from re import escape, match
+from re import escape, match, sub
+from sqlite3 import connect, IntegrityError
 from urllib.request import urlopen
 
 from numpy import abs, argwhere, asarray, linspace, min, searchsorted, zeros
@@ -7,7 +8,7 @@ from scipy.interpolate import interp1d, interp2d, LinearNDInterpolator, NearestN
 
 from .utils import cm_to_m, cross_section_bands, cross_section_data_files, \
                    cross_section_inquiry, Table
-from ...utils.database_utilities import ascii_table_records
+from ...utils.database_utilities import ascii_table_records, scrub
 
 
 info = getLogger(__name__).info
@@ -25,13 +26,13 @@ class HitranCrossSection(object):
 
         Args:
             molecule: Molecule chemical formula.
-            database: Path to database (not supported yet).
+            database: Path to database.
         """
         self.molecule = molecule
         if database is None:
             self.download_from_web()
         else:
-            raise NotImplementedError("database reads not implemented yet.")
+            self.load_from_database(database)
 
     def absorption_coefficient(self, temperature, pressure, grid):
         """Calculates collision-induced absorption coefficients.
@@ -133,16 +134,25 @@ class HitranCrossSection(object):
                 band_params.append(table.band_params)
                 pressures.append(table.pressure)
                 tables.append(table)
-        cross_section_inquiry(tables, self.molecule)
+        self.bands = self.create_bands(tables, self.molecule)
 
-        # Sort tables by pressure, then temperature, then wavenumber.
+    @staticmethod
+    def create_bands(tables, molecule):
+        """Organize the cross-section tables into bands.
+
+        Args:
+            tables: List of Table objects.
+            molecule: String chemical formula.
+
+        Returns:
+            A list of lists of Table objects containing cross sections.
+        """
+        cross_section_inquiry(tables, molecule)
         sorted_tables= sorted(sorted(sorted(sorted(tables, key=lambda x: x.pressure),
                                             key=lambda x: x.temperature),
                                       key=lambda x: x.wavenumber[-1]),
                               key=lambda x: x.wavenumber[0])
-
-        # Split up the tables by spectral band.
-        self.bands = cross_section_bands(sorted_tables)
+        return cross_section_bands(sorted_tables)
 
     def parse_records(self, records):
         """Parses all database records and stores the data.
@@ -153,12 +163,13 @@ class HitranCrossSection(object):
         Returns:
             A Table object.
         """
+        torr_to_Pa = 133.332
         for i, record in enumerate(records):
             if i == 0:
                 temperature, pressure = (float(x.strip()) for x in record[4:6])
                 w0, wn, n = (float(x.strip()) for x in record[1:4])
                 band_params = tuple([w0, wn, int(n)])
-                table = Table(temperature, band_params, pressure)
+                table = Table(temperature, band_params, pressure*torr_to_Pa)
                 table.wavenumber = linspace(w0, wn, int(n), endpoint=True)
             else:
                 table.cross_section += [float(x) for x in record]
@@ -186,7 +197,76 @@ class HitranCrossSection(object):
         Args:
             database: Path to SQLite database that will be create/added to.
         """
-        raise NotImplementedError("this method doesn't exist yet.")
+        molecule = sub("-", "_", scrub(self.molecule))
+        with connect(database) as connection:
+            cursor = connection.cursor()
+            cursor.execute("PRAGMA foreign_keys = ON")
+
+            # Create a table to hold band parameters.
+            band_table = "{}_cross_section_band_parameters".format(molecule)
+            cursor.execute("""CREATE TABLE {}(band_id INTEGER PRIMARY KEY, lower_bound REAL,
+                              upper_bound REAL, size INTEGER)""".format(band_table))
+            for band in self.bands:
+                cursor.execute("""INSERT INTO {}(lower_bound, upper_bound, size)
+                                  VALUES (?, ?, ?)""".format(band_table),
+                               band[0].band_params)
+            connection.commit()
+
+            # Create a table to hold temperatures.
+            temperature_table = "{}_cross_section_temperatures".format(molecule)
+            cursor.execute("""CREATE TABLE {}(temperature_id INTEGER PRIMARY KEY,
+                              temperature REAL UNIQUE)""".format(temperature_table))
+            for band in self.bands:
+                for table in band:
+                    try:
+                        cursor.execute("""INSERT INTO {}(temperature)
+                                          VALUES (?)""".format(temperature_table),
+                                       (table.temperature,))
+                    except IntegrityError:
+                        # Prevent duplicate temperature entries.
+                        continue
+            connection.commit()
+
+            # Create a table to hold pressures.
+            pressure_table = "{}_cross_section_pressures".format(molecule)
+            cursor.execute("""CREATE TABLE {}(pressure_id INTEGER PRIMARY KEY,
+                              pressure REAL UNIQUE)""".format(pressure_table))
+            for band in self.bands:
+                for table in band:
+                    try:
+                        cursor.execute("""INSERT INTO {}(pressure)
+                                          VALUES (?)""".format(pressure_table),
+                                       (table.pressure,))
+                    except IntegrityError:
+                        # Prevent duplicate pressure entries.
+                        continue
+            connection.commit()
+
+            # Create a table of cross sections.
+            cross_section_table = "{}_cross_sections".format(molecule)
+            cursor.execute("""CREATE TABLE {}(wavenumber REAL, cross_section REAL,
+                              band INTEGER REFERENCES {}(band_id), temperature INTEGER
+                              REFERENCES {}(temperature_id), pressure INTEGER REFERENCES
+                              {}(pressure_id))""".format(cross_section_table, band_table,
+                                                         temperature_table, pressure_table))
+            for band in self.bands:
+                cursor.execute("""SELECT band_id FROM {} WHERE lower_bound == {} AND
+                                  upper_bound == {} AND size == {}""".format(band_table,
+                                                                             *band[0].band_params))
+                band_id = cursor.fetchone()[0]
+                for table in band:
+                    cursor.execute("""SELECT temperature_id FROM {} WHERE temperature ==
+                                      {}""".format(temperature_table, table.temperature))
+                    temperature_id = cursor.fetchone()[0]
+                    cursor.execute("""SELECT pressure_id FROM {} WHERE pressure ==
+                                      {}""".format(pressure_table, table.pressure))
+                    pressure_id = cursor.fetchone()[0]
+                    for wavenumber, cross_section in zip(table.wavenumber, table.cross_section):
+                        cursor.execute("""INSERT INTO {} VALUES
+                                          (?, ?, ?, ?, ?)""".format(cross_section_table),
+                                       (wavenumber, cross_section, band_id, temperature_id,
+                                        pressure_id))
+            connection.commit()
 
     def load_from_database(self, database):
         """Loads data from a previously created SQLite database.
@@ -194,4 +274,37 @@ class HitranCrossSection(object):
         Args:
             database: Path to SQLite database.
         """
-        raise NotImplementedError("this method doesn't exist yet.")
+        molecule = sub("-", "_", scrub(self.molecule))
+        with connect(database) as connection:
+            cursor = connection.cursor()
+            cursor.execute("PRAGMA foreign_keys = ON")
+
+            # Read the band parameters.
+            name = "{}_cross_section_band_parameters".format(molecule)
+            cursor.execute("SELECT band_id, lower_bound, upper_bound, size FROM {}".format(name))
+            band_params = [record for record in cursor.fetchall()]
+
+            # Read records from the database table.
+            name = "{}_cross_sections".format(molecule)
+            tables = []
+            for band in band_params:
+                cursor.execute("""SELECT wavenumber, cross_section, temperature, pressure
+                                  FROM {} WHERE band == {}""".format(name, band[0]))
+                temperature = None; pressure = None
+                for record in cursor.fetchall():
+                    if record[2] == temperature and record[3] == pressure:
+                        tables[-1].insert(*record[:2])
+                    else:
+                        # Get the temperature and pressure.
+                        foreign_name = "{}_cross_section_temperatures".format(molecule)
+                        cursor.execute("""SELECT temperature FROM {} WHERE temperature_id
+                                          == {}""".format(foreign_name, record[2]))
+                        t = cursor.fetchone()[0]
+                        foreign_name = "{}_cross_section_pressures".format(molecule)
+                        cursor.execute("""SELECT pressure FROM {} WHERE pressure_id
+                                          == {}""".format(foreign_name, record[3]))
+                        p = cursor.fetchone()[0]
+                        tables.append(Table(t, band[1:], p))
+                        tables[-1].insert(*record[:2])
+                        temperature, pressure = record[2:]
+        self.bands = self.create_bands(tables, molecule)
