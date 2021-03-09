@@ -41,7 +41,7 @@ class TotalPartitionFunction(object):
         """
         with connect(database) as connection:
             cursor = connection.cursor()
-            name = scrub(self.molecule)
+            name = "{}_tips".format(scrub(self.molecule))
             data = transpose(self.data)
             columns = ", ".join(["temperature REAL"] +
                                 ["Q_{} REAL".format(i+1) for i in range(data.shape[1])])
@@ -70,7 +70,7 @@ class TotalPartitionFunction(object):
         """
         with connect(database) as connection:
             cursor = connection.cursor()
-            name = scrub(self.molecule)
+            name = "{}_tips".format(scrub(self.molecule))
             cursor.execute("SELECT * from {}".format(name))
             self.parse_records(cursor.fetchall())
 

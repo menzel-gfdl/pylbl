@@ -55,7 +55,7 @@ class Hitran(object):
         """
         with connect(database) as connection:
             cursor = connection.cursor()
-            name = scrub(self.molecule)
+            name = "{}_lines".format(scrub(self.molecule))
             shortnames, types = [], []
             for x in self.parameters:
                 if x.dtype is linear_molecule_quantum_numbers:
@@ -117,7 +117,7 @@ class Hitran(object):
         """
         with connect(database) as connection:
             cursor = connection.cursor()
-            name = scrub(self.molecule)
+            name = "{}_lines".format(scrub(self.molecule))
             shortnames = [x.shortname for x in self.parameters
                           if x.shortname != "q1" and x.shortname != "q2"]
             quantum_numbers = len(shortnames) != len(self.parameters)
