@@ -3,7 +3,7 @@ from re import escape, match, sub
 from sqlite3 import connect, IntegrityError
 from urllib.request import urlopen
 
-from numpy import abs, argwhere, asarray, linspace, min, searchsorted, zeros
+from numpy import abs, argwhere, asarray, isnan, linspace, min, searchsorted, zeros
 from scipy.interpolate import interp1d, interp2d, LinearNDInterpolator, NearestNDInterpolator
 
 from .utils import cm_to_m, cross_section_bands, cross_section_data_files, \
@@ -104,11 +104,14 @@ class HitranCrossSection(object):
                     data = zeros(z.shape[-1])
                     for i in range(z.shape[-1]):
                         if z.shape[0] >= 4:
-                            f = LinearNDInterpolator(list(zip(x, y)), z[:,i], fill_value=0.)
-                        else:
-                            # If there isn't enough data (4 temperature, pressure points),
-                            # then default to nearest-neighbor interpolation.
-                            f = NearestNDInterpolator(list(zip(x, y)), z[:,i])
+                            f = LinearNDInterpolator(list(zip(x, y)), z[:,i])
+                            data[i] = f(temperature, pressure)
+                            if not isnan(data[i]):
+                                continue
+                        # If there isn't enough data (4 temperature, pressure points) or the,
+                        # point cannot be interpolated to using LinearNDInterpolator, then
+                        # default to nearest-neighbor interpolation.
+                        f = NearestNDInterpolator(list(zip(x, y)), z[:,i])
                         data[i] = f(temperature, pressure)
                     # Interpolate to the input spectral grid.
                     cross_section[left:right] = interp1d(asarray(band[0].wavenumber),
