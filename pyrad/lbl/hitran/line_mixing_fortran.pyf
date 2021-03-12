@@ -1,0 +1,50 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module line_mixing_fortran ! in 
+    interface  ! in :line_mixing_fortran
+        subroutine create_relaxation_matrix(nlines,temperature,iso,li,lf,gamma_hwhm,population,dk0,ji,jf,b0pp,b0pq,b0pr,b0qp,b0qq,b0qr,b0rp,b0rq,b0rr,w0pp,w0pq,w0pr,w0qp,w0qq,w0qr,w0rp,w0rq,w0rr,w) ! in :line_mixing_fortran:line_mixing.f90
+            integer(kind=4) intent(in) :: nlines
+            real(kind=8) intent(in) :: temperature
+            integer(kind=4) intent(in) :: iso
+            integer(kind=4) intent(in) :: li
+            integer(kind=4) intent(in) :: lf
+            real(kind=8) dimension(nlines),intent(in),depend(nlines) :: gamma_hwhm
+            real(kind=8) dimension(nlines),intent(in),depend(nlines) :: population
+            real(kind=8) dimension(nlines),intent(in),depend(nlines) :: dk0
+            integer(kind=4), target,dimension(nlines),intent(in),depend(nlines) :: ji
+            integer(kind=4), target,dimension(nlines),intent(in),depend(nlines) :: jf
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0pp
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0pq
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0pr
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0qp
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0qq
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0qr
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0rp
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0rq
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: b0rr
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0pp
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0pq
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0pr
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0qp
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0qq
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0qr
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0rp
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0rq
+            real(kind=8) dimension(0:9,0:9,0:130,0:130),intent(in) :: w0rr
+            real(kind=8) dimension(nlines,nlines),intent(inout),depend(nlines,nlines) :: w
+        end subroutine create_relaxation_matrix
+        subroutine calculate_coefficients(nlines,iso,dipole,ji,v,w,y) ! in :line_mixing_fortran:line_mixing.f90
+            integer(kind=4) intent(in) :: nlines
+            integer(kind=4) intent(in) :: iso
+            real(kind=8) dimension(nlines),intent(in),depend(nlines) :: dipole
+            integer(kind=4) dimension(nlines),intent(in),depend(nlines) :: ji
+            real(kind=8) dimension(nlines),intent(in),depend(nlines) :: v
+            real(kind=8) dimension(nlines,nlines),intent(in),depend(nlines,nlines) :: w
+            real(kind=8) dimension(nlines),intent(inout),depend(nlines) :: y
+        end subroutine calculate_coefficients
+    end interface 
+end python module line_mixing_fortran
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
